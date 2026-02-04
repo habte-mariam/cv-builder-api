@@ -4,6 +4,7 @@ from pdf_generator import CVGenerator
 import base64
 import google.generativeai as genai
 from constants import JOB_CATEGORIES, SKILLS_DATABASE
+from constants import UNIVERSITIES, DEGREE_TYPES
 
 # --- Supabase & Gemini API Key Setup ---
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
@@ -134,15 +135,32 @@ elif page == "Create/Edit CV":
                 # State እንዲይዝ
                 ui['job_title'] = jt
 
-            with tabs[1]: # Education Fields
-                edu_list = ui.get('education', [])
-                ed = edu_list[0] if isinstance(edu_list, list) and len(edu_list) > 0 else {}
-                sch = st.text_input("School/University", ed.get('school', ""))
-                deg = st.text_input("Degree", ed.get('degree', ""))
-                fld = st.text_input("Field of Study", ed.get('field', ""))
-                gy = st.text_input("Graduation Year", ed.get('grad_year', ""))
-                cgpa = st.text_input("CGPA", ed.get('cgpa', ""))
-                proj = st.text_area("Final Project", ed.get('project', ""))
+                with tabs[1]: # Education Fields
+                    edu_list = ui.get('education', [])
+                    ed = edu_list[0] if isinstance(edu_list, list) and len(edu_list) > 0 else {}
+                    
+                    # 1. School/University Selection
+                    sch_choice = st.selectbox("School/University", options=UNIVERSITIES)
+                    sch = st.text_input("Manual School Name", "") if sch_choice == "Other" else sch_choice
+                    
+                    # 2. Degree Selection
+                    deg_choice = st.selectbox("Degree", options=DEGREE_TYPES)
+                    deg = st.text_input("Manual Degree Name", "") if deg_choice == "Other" else deg_choice
+                    
+                    # 3. Field of Study
+                    fld = st.text_input("Field of Study", ed.get('field', ""))
+                    
+                    # 4. Graduation Year (Number Input)
+                    gy = st.number_input("Graduation Year", min_value=1990, max_value=2030, value=2024)
+                    
+                    # 5. CGPA (Number Input)
+                    cgpa = st.number_input("CGPA", min_value=0.0, max_value=4.0, value=0.0, step=0.01)
+                    
+                    proj = st.text_area("Final Project", ed.get('project', ""))
+                    
+                    # ዳታውን ወደ UI state ለመላክ
+                    ui['education_school'] = sch
+                    ui['education_degree'] = deg
 
             with tabs[2]: # Experience Fields
                 exp_list = ui.get('experience', [])

@@ -42,3 +42,18 @@ SKILLS_DATABASE = [
     "Customer Service", "Critical Thinking", "Teamwork", "Public Speaking", "Microsoft Office",
     "Accounting Software", "AutoCAD", "GIS", "Stata", "SPSS", "Digital Marketing", "SEO"
 ]
+
+# constants.py ውስጥ ጨምር
+
+UNIVERSITIES = [
+    "Addis Ababa University", "Bahir Dar University", "Jimma University", 
+    "Haramaya University", "Hawassa University", "Gondar University", 
+    "Mekelle University", "Arba Minch University", "Adama Science and Technology University", 
+    "Addis Ababa Science and Technology University", "Unity University", "Hilcoe", "Other"
+]
+
+DEGREE_TYPES = [
+    "Bachelor of Science (B.Sc.)", "Bachelor of Arts (B.A.)", 
+    "Master of Science (M.Sc.)", "Master of Arts (M.A.)", 
+    "Doctor of Philosophy (Ph.D.)", "MD (Medicine)", "Diploma", "Other"
+]
