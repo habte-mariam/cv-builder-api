@@ -78,7 +78,7 @@ with st.sidebar:
         )
 
     st.divider()
-    st.caption("v2.0 | Powered by Gemini AI")
+    st.caption("v2.0 | Powered by HabTech")
 
 # --- Content Logic (እንደቀድሞው ይቀጥላል) ---
 # --- Dashboard ---
