@@ -53,9 +53,15 @@ UNIVERSITIES = [
 ]
 
 DEGREE_TYPES = [
-    "Bachelor of Science (B.Sc.)", "Bachelor of Arts (B.A.)", 
-    "Master of Science (M.Sc.)", "Master of Arts (M.A.)", 
-    "Doctor of Philosophy (Ph.D.)", "MD (Medicine)", "Diploma", "Other"
+    "Grade 1-8", 
+    "Grade 9-10", 
+    "Grade 11-12", 
+    "TVET/Level", 
+    "Diploma", 
+    "Bachelor's Degree", 
+    "Master's Degree", 
+    "PhD", 
+    "Other"
 ]
 
 

@@ -109,19 +109,50 @@ elif page == "Create/Edit CV":
             gen = c2.selectbox("Gender", ["Male", "Female"], index=0 if ui.get("gender")=="Male" else 1)
             summ = st.text_area("Summary", ui.get("summary", ""), height=120)
 
-# 2. Education Tab (Safe)
+# 2. Education Tab (Safe & Conditional)
         with tabs[1]:
             st.subheader("Academic Background")
             edu_list = ui.get('education', [])
             ed = edu_list[0] if isinstance(edu_list, list) and len(edu_list) > 0 else {}
+
+            # Define school levels for the logic
+            school_levels = ["Grade 1-8", "Grade 9-10", "Grade 11-12"]
             
-            # Use .get() on the 'ed' object
-            sch = st.selectbox("University", options=UNIVERSITIES, index=UNIVERSITIES.index(ed.get('school')) if ed.get('school') in UNIVERSITIES else 0)
-            deg = st.selectbox("Degree", options=DEGREE_TYPES, index=DEGREE_TYPES.index(ed.get('degree')) if ed.get('degree') in DEGREE_TYPES else 0)
-            fld = st.selectbox("Field", options=FIELDS_OF_STUDY, index=FIELDS_OF_STUDY.index(ed.get('field')) if ed.get('field') in FIELDS_OF_STUDY else 0)
-            gy = st.number_input("Year", 1990, 2030, int(ed.get('grad_year', 2024)))
-            cgpa = st.text_input("CGPA", str(ed.get('cgpa', '3.0')))
-            proj = st.text_area("Final Project", ed.get('project', ""))
+            # Level Selection
+            current_deg = ed.get('degree', "Bachelor's Degree")
+            deg = st.selectbox("Level of Education", 
+                               options=DEGREE_TYPES, 
+                               index=DEGREE_TYPES.index(current_deg) if current_deg in DEGREE_TYPES else 0)
+
+            # --- Universal Fields (Always Shown) ---
+            sch_choice = st.selectbox("School/University", options=UNIVERSITIES)
+            sch = st.text_input("Manual School Name", "") if sch_choice == "Other" else sch_choice
+            
+            gy = st.number_input("Year of Completion", 1990, 2030, int(ed.get('grad_year', 2024)))
+
+            # --- Conditional Fields (Hidden for School Levels) ---
+            if deg not in school_levels:
+                # These fields only appear for Diploma, Degree, etc.
+                fld_choice = st.selectbox("Field of Study", options=FIELDS_OF_STUDY)
+                fld = st.text_input("Specify Field", "") if fld_choice == "Other" else fld_choice
+                
+                cgpa = st.text_input("CGPA", str(ed.get('cgpa', '0.0')))
+                proj = st.text_area("Final Project/Thesis", ed.get('project', ""))
+                
+                # Store in UI state
+                ui['education_field'] = fld
+                ui['education_cgpa'] = cgpa
+                ui['education_project'] = proj
+            else:
+                # Set default values for school levels to prevent DB/PDF issues
+                ui['education_field'] = "General Education"
+                ui['education_cgpa'] = "N/A"
+                ui['education_project'] = ""
+
+            # Core fields mapping
+            ui['education_school'] = sch
+            ui['education_degree'] = deg
+            ui['education_year'] = gy
 
         # 3. Experience Tab (Safe)
         with tabs[2]:
