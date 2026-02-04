@@ -101,14 +101,26 @@ elif page == "Create/Edit CV":
             ph2 = c2.text_input("Secondary Phone", ui.get("phone2", ""))
             adr = st.text_input("Address", ui.get("address", ""))
             
-# --- የተስተካከለ የ Age Logic ---
-            raw_age = ui.get("age", "25")
-            if isinstance(raw_age, int):
-                clean_age = raw_age
-            else:
-                clean_age = int(raw_age) if int(raw_age).isdigit() else 25
+# --- የተስተካከለ የ Age Logic (በካላንደር) ---
+            from datetime import date
+
+            # 1. የዛሬን ቀን ማግኘት
+            today = date.today()
             
-            age = c1.number_input("Age", min_value=18, max_value=60, value=max(18, clean_age))
+            # 2. ተጠቃሚው የልደት ቀኑን እንዲመርጥ ማድረግ (Default: ከ25 አመት በፊት)
+            # የልደት ቀኑን ከዳታቤዝ ለማንበብ ሙከራ ይደረጋል፣ ከሌለ ግን የዛሬ 25 አመት በፊት ይታያል
+            birth_date = st.date_input(
+                "Select Birth Date",
+                value=date(today.year - 25, today.month, today.day),
+                max_value=date(today.year - 18, today.month, today.day), # ከ18 አመት በታች መሆን አይችልም
+                min_value=date(today.year - 65, today.month, today.day)  # ከ65 አመት በላይ መሆን አይችልም
+            )
+            
+            # 3. እድሜውን በቁጥር ማስላት
+            age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+            
+            # 4. እድሜውን በቁጥር እንዲያይ ማድረግ (Read-only)
+            st.info(f"Your calculated age is: **{age}**")
             
             gen = c2.selectbox("Gender", ["Male", "Female"], index=0 if ui.get("gender")=="Male" else 1)
             summ = st.text_area("Summary", ui.get("summary", ""), height=120)
