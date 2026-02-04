@@ -188,53 +188,53 @@ elif page == "Create/Edit CV":
         with tabs[4]:
             st.subheader("🛠 Professional Skills")
             
-            # 1. ዳታቤዝ ውስጥ ያሉትን ክህሎቶች ማግኘት
-            existing_skills = [s['name'] for s in ui.get('skills', [])] if isinstance(ui.get('skills'), list) else []
+            # 1. ዳታቤዝ ውስጥ ያሉትን ወይም ቀድሞ የተመረጡትን ማግኘት
+            if 'temp_skills' not in st.session_state:
+                st.session_state.temp_skills = [s['name'] for s in ui.get('skills', [])] if isinstance(ui.get('skills'), list) else []
 
-            # 2. የክህሎት ዘርፉን ማስመረጥ (Category Selection)
+            # 2. የክህሎት ዘርፉን ማስመረጥ
             skill_categories = list(SKILLS_DATABASE.keys())
             selected_cat = st.selectbox("Choose Skill Category", options=["All"] + skill_categories)
 
-            # 3. እንደ ተመረጠው ዘርፍ ዝርዝሩን ማጣራት (Filtering)
+            # 3. እንደ ተመረጠው ዘርፍ ዝርዝሩን ማጣራት
             if selected_cat == "All":
-                # ሁሉንም ዘርፎች ማሳየት
                 category_options = [skill for sublist in SKILLS_DATABASE.values() for skill in sublist]
             else:
-                # የተመረጠውን ዘርፍ ብቻ ማሳየት
                 category_options = SKILLS_DATABASE.get(selected_cat, [])
 
-            # 4. አዳዲስ በእጅ የተጨመሩ ክህሎቶች ካሉ በዝርዝሩ ውስጥ እንዲታዩ ማድረግ
-            all_available_options = sorted(list(set(category_options + existing_skills)))
+            # 4. ቀድሞ የተመረጡት በዝርዝሩ ውስጥ እንዲታዩ ማዋሃድ (ይህ ወሳኝ ነው!)
+            # ተጠቃሚው ዘርፍ ሲቀይር የድሮ ምርጫዎቹ 'options' ውስጥ ከሌሉ ይጠፋሉ፣ ስለዚህ እዚህ ጋር እንደምርባቸዋለን
+            all_options = sorted(list(set(category_options + st.session_state.temp_skills)))
 
-            # 5. Dynamic Multiselect
-            selected_skills = st.multiselect(
-                f"Select Skills from {selected_cat}", 
-                options=all_available_options, 
-                default=[s for s in existing_skills if s in all_available_options]
+            # 5. Multiselect
+            # በየዘርፉ ውስጥ ሆነህ የመረጥከው እዚህ temp_skills ውስጥ ይቀመጣል
+            current_selections = st.multiselect(
+                f"Select or Type Skills ({selected_cat})", 
+                options=all_options, 
+                default=[s for s in st.session_state.temp_skills if s in all_options]
             )
 
-            # ጠቃሚ ማሳሰቢያ፡ ተጠቃሚው ዘርፍ ሲቀያይር የድሮ ምርጫው እንዳይጠፋ
-            # ሁሉንም የተመረጡ ክህሎቶች በ session_state ማዋሃድ አስፈላጊ ሊሆን ይችላል።
-            if 'global_skills' not in st.session_state:
-                st.session_state.global_skills = existing_skills
-
-            # አዲስ የተመረጡትን ወደ global ዝርዝር መጨመር
-            for s in selected_skills:
-                if s not in st.session_state.global_skills:
-                    st.session_state.global_skills.append(s)
+            # 6. ሴሽን ስቴቱን ማዘመን
+            # አዲስ የተመረጡትን መያዝ እና የተሰረዙትን ማስወገድ
+            updated_skills = list(set(st.session_state.temp_skills + current_selections))
+            # በወቅታዊው ዝርዝር ውስጥ እያሉ ያልተመረጡትን (Unchecked) ማስወገድ
+            for opt in all_options:
+                if opt in updated_skills and opt not in current_selections:
+                    updated_skills.remove(opt)
             
-            # የተሰረዙ ካሉ ከ global ዝርዝር መቀነስ
-            st.session_state.global_skills = [s for s in st.session_state.global_skills if s in selected_skills or s not in all_available_options]
-
-            skills_in = ", ".join(st.session_state.global_skills)
+            st.session_state.temp_skills = updated_skills
+            skills_in = ", ".join(st.session_state.temp_skills)
             
-            st.info(f"Selected Skills: {skills_in}")
+            # የተመረጡትን ክህሎቶች በትንሽ 'Tags' መልክ ማሳያ (ቦታ ለመቆጠብ)
+            if st.session_state.temp_skills:
+                st.write("---")
+                st.caption("Selected Skills Summary:")
+                st.write(f" `{skills_in}` ")
 
         # 6. Generate Tab
         with tabs[5]:
             st.info("Ensure all data is correct before proceeding.")
             submit = st.form_submit_button("🚀 Save Data & Generate Full Preview", use_container_width=True)
-
     # Logic after form submission
     if submit:
         try:
