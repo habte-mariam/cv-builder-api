@@ -39,12 +39,13 @@ with st.sidebar:
 
     # 1. Main Navigation (በጥሩ መልክ)
     # ማሳሰቢያ፡ segmented_control በቅርብ የወጣ የ streamlit feature ነው
-    page = st.segmented_control(
-        "Menu",
-        ["Dashboard", "Create/Edit CV"],
+with st.sidebar:
+    page = option_menu(
+        menu_title="Menu",
+        options=["Dashboard", "Create/Edit CV"],
         icons=["grid", "pencil-square"],
-        default="Dashboard",
-        selection_mode="single"
+        menu_icon="cast",
+        default_index=0,
     )
     
     st.divider()
