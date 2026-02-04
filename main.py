@@ -4,8 +4,13 @@ from pdf_generator import CVGenerator
 import base64
 import google.generativeai as genai
 
+# --- Supabase & Gemini API Key Setup ---
+SUPABASE_URL = st.secrets["SUPABASE_URL"]
+SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+
 # --- Gemini Configuration ---
-genai.configure(api_key="AIzaSyAinAWcJpeNPRqMEQy9PkyHS7Rjfyr1TxM")
+genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-3-flash-preview')
 
 def get_ai_suggestion(prompt):
@@ -16,8 +21,6 @@ def get_ai_suggestion(prompt):
         return f"AI Error: {e}"
 
 # --- Supabase Setup ---
-SUPABASE_URL = "https://bdnrwitvykbrdpsxuqjy.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkbnJ3aXR2eWticmRwc3h1cWp5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDA2NDQ3MiwiZXhwIjoyMDg1NjQwNDcyfQ.2dVYDvbyaohsSt0DK2QsYKDwadjwyy6a97WpYDT7DBo"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.set_page_config(page_title="CV Maker Pro", layout="wide")
