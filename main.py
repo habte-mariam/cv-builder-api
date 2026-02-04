@@ -5,6 +5,10 @@ import base64
 import google.generativeai as genai
 from constants import JOB_CATEGORIES, SKILLS_DATABASE
 from constants import UNIVERSITIES, DEGREE_TYPES
+from constants import FIELDS_OF_STUDY
+from constants import DEREJA_CERTIFICATES, CERTIFICATE_NAMES
+from constants import ISSUING_ORGANIZATIONS
+
 
 # --- Supabase & Gemini API Key Setup ---
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
@@ -148,7 +152,15 @@ elif page == "Create/Edit CV":
                     deg = st.text_input("Manual Degree Name", "") if deg_choice == "Other" else deg_choice
                     
                     # 3. Field of Study
-                    fld = st.text_input("Field of Study", ed.get('field', ""))
+                    fld_choice = st.selectbox("Field of Study", options=FIELDS_OF_STUDY)
+
+                    if fld_choice == "Other":
+                        fld = st.text_input("Please specify your Field of Study", "")
+                    else:
+                        fld = fld_choice
+
+                    # ዳታውን ወደ UI state ለመላክ
+                    ui['education_field'] = fld
                     
                     # 4. Graduation Year (Number Input)
                     gy = st.number_input("Graduation Year", min_value=1990, max_value=2030, value=2024)
@@ -190,19 +202,52 @@ elif page == "Create/Edit CV":
                 ui['duration'] = f"{dur} Years" # ፒዲኤፉ ላይ '5 Years' ተብሎ እንዲወጣ
 
             with tabs[3]: # Certificates & References
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    cert_list = ui.get('certificates', [])
-                    ce = cert_list[0] if isinstance(cert_list, list) and len(cert_list) > 0 else {}
-                    c_nm = st.text_input("Cert Name", ce.get('cert_name', ""))
-                    c_org = st.text_input("Issuing Org", ce.get('organization', ""))
-                    c_yr = st.text_input("Year Issued", ce.get('year', ""))
-                with col_b:
-                    ref_list = ui.get('user_references', [])
-                    rf = ref_list[0] if isinstance(ref_list, list) and len(ref_list) > 0 else {}
-                    r_nm = st.text_input("Ref Name", rf.get('name', ""))
-                    r_jb = st.text_input("Ref Job", rf.get('job', ""))
-                    r_ph = st.text_input("Ref Phone", rf.get('phone', ""))
+                        col_a, col_b = st.columns(2)
+
+                        # --- ግራ በኩል (Column A) ---
+                        with col_a:
+                            st.subheader("Certificates")
+                            
+                            # 1. ድርጅት ምርጫ
+                            c_org_choice = st.selectbox("Issuing Org", options=ISSUING_ORGANIZATIONS)
+                            c_org = st.text_input("Type Organization Name", "") if c_org_choice == "Other" else c_org_choice
+                            
+                            # 2. የሰርተፍኬት ስም ምርጫ
+                            if c_org_choice == "Dereja Academy":
+                                current_options = DEREJA_CERTIFICATES + ["Other"]
+                            else:
+                                current_options = [c for c in CERTIFICATE_NAMES if c not in DEREJA_CERTIFICATES] + ["Other"]
+                                
+                            c_nm_choice = st.selectbox("Cert Name", options=current_options)
+                            c_nm = st.text_input("Type Certificate Name", "") if c_nm_choice == "Other" else c_nm_choice
+                            
+                            # 3. አመተ ምህረት
+                            c_yr = st.number_input("Year Issued", min_value=2000, max_value=2030, value=2026)
+
+                            ui['cert_name'] = c_nm
+                            ui['organization'] = c_org
+                            ui['year'] = c_yr
+
+                        # --- ቀኝ በኩል (Column B) ---
+                        # ማሳሰቢያ፡ ይህ መስመር ከ "with col_a" መውጣት አለበት (እኩል መሆን አለባቸው)
+                        with col_b:
+                            st.subheader("References")
+                            ref_list = ui.get('user_references', [])
+                            rf = ref_list[0] if isinstance(ref_list, list) and len(ref_list) > 0 else {}
+                            
+                            # 1. የምስክር ሰው ስም
+                            r_nm = st.text_input("Full Name", rf.get('name', ""), placeholder="e.g. Dr. Abebe Kebede")
+                            
+                            # 2. የስራ መደብ
+                            r_jb = st.text_input("Job Title & Company", rf.get('job', ""), placeholder="e.g. Manager at Ethio Telecom")
+                            
+                            # 3. ስልክ ቁጥር
+                            r_ph = st.text_input("Phone Number", rf.get('phone', ""), placeholder="e.g. +251 911 00 00 00")
+
+                            # ዳታውን ወደ UI state ለመላክ
+                            ui['ref_name'] = r_nm
+                            ui['ref_job'] = r_jb
+                            ui['ref_phone'] = r_ph
 
             with tabs[4]: # Skills
                 sk_val = ", ".join([s['name'] for s in ui.get('skills', [])]) if isinstance(ui.get('skills'), list) else ""

@@ -57,3 +57,63 @@ DEGREE_TYPES = [
     "Master of Science (M.Sc.)", "Master of Arts (M.A.)", 
     "Doctor of Philosophy (Ph.D.)", "MD (Medicine)", "Diploma", "Other"
 ]
+
+
+FIELDS_OF_STUDY = [
+    "Computer Science", "Information Technology", "Software Engineering", 
+    "Electrical Engineering", "Civil Engineering", "Mechanical Engineering", 
+    "Accounting and Finance", "Business Management", "Economics", 
+    "Marketing Management", "Medicine", "Public Health", "Pharmacy", 
+    "Nursing", "Law", "Psychology", "Sociology", "Political Science", 
+    "Architecture", "Statistics", "Mathematics", "Physics", "Chemistry", 
+    "Biology", "Other"
+]
+
+# constants.py
+
+# የደረጃ አካዳሚ ዝርዝር (ለብቻው ለ Logic እንዲመች)
+DEREJA_CERTIFICATES = [
+    "Dereja Academy Job Readiness Program (JRP) Completion",
+    "Dereja Academy Soft Skills Training",
+    "Dereja Academy Leadership & Employability Skills",
+    "Dereja Academy Career Development Certificate",
+    "Dereja Academy Professional Communication Skills",
+    "Dereja Academy Critical Thinking & Problem Solving",
+    "Dereja Academy Digital Literacy for Workplace"
+]
+
+# ሁሉንም ያጣመረ የሰርተፍኬት ስሞች ዝርዝር
+CERTIFICATE_NAMES = DEREJA_CERTIFICATES + [
+    "AWS Certified Solutions Architect", 
+    "Cisco Certified Network Associate (CCNA)",
+    "Project Management Professional (PMP)", 
+    "Certified Information Systems Security Professional (CISSP)",
+    "CompTIA A+", 
+    "CompTIA Security+", 
+    "Microsoft Certified: Azure Fundamentals",
+    "Google Data Analytics Professional Certificate", 
+    "CPA (Certified Public Accountant)",
+    "Full Stack Web Development (EthioCoders/ALX)", 
+    "IELTS Academic/General", 
+    "TOEFL", 
+    "Other"
+]
+
+# ሰጪ ተቋማት (የሀገር ውስጥና ዓለም አቀፍ ድርጅቶች ጥምረት)
+ISSUING_ORGANIZATIONS = [
+    "Dereja Academy", 
+    "EthioCoders (ALX/Holberton)", 
+    "Amazon Web Services (AWS)", 
+    "Cisco", 
+    "Project Management Institute (PMI)",
+    "Microsoft", 
+    "Google", 
+    "CompTIA", 
+    "Gebeya Training",
+    "Coursera", 
+    "Udemy", 
+    "LinkedIn Learning",
+    "Oracle", 
+    "IBM", 
+    "Other"
+]
