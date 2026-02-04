@@ -252,7 +252,7 @@ elif page == "Create/Edit CV":
         try:
             profile_payload = {
                 "profile_pic": profile_pic_base64, "email": em, "first_name": fn, "last_name": ln, 
-                "job_title": jt, "phone": ph, "phone2": ph2, "address": adr, "age": str(age),
+                "job_title": jt, "phone": ph, "phone2": ph2, "address": adr, "age": int(age),
                 "gender": gen, "summary": summ
             }
             res = supabase.table("profiles").upsert(profile_payload, on_conflict="email").execute()
