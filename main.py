@@ -117,21 +117,37 @@ elif page == "Create/Edit CV":
             ed = edu_list[0] if isinstance(edu_list, list) and len(edu_list) > 0 else {}
             school_levels = ["Grade 1-8", "Grade 9-10", "Grade 11-12"]
             
+            # 1. Level Selection
             current_deg = ed.get('degree', "Bachelor's Degree")
             deg = st.selectbox("Level of Education", options=DEGREE_TYPES, 
                                index=DEGREE_TYPES.index(current_deg) if current_deg in DEGREE_TYPES else 0)
 
-            sch_choice = st.selectbox("School/University", options=UNIVERSITIES)
-            sch = st.text_input("Manual School Name", "") if sch_choice == "Other" else sch_choice
-            gy = st.number_input("Year of Completion", 1990, 2030, int(ed.get('grad_year', 2024)))
-
-            if deg not in school_levels:
+            # 2. Conditional School Name Input
+            if deg in school_levels:
+                # ለ 1-12 ተማሪዎች የዩኒቨርሲቲ ምርጫ አያስፈልግም፣ ስም ብቻ ማስገባት
+                sch = st.text_input("School Name", ed.get('school', ""))
+                fld, cgpa, proj = "General Education", "N/A", ""
+            else:
+                # ለከፍተኛ ትምህርት የዩኒቨርሲቲ ዝርዝር ማሳየት
+                sch_choice = st.selectbox("University", options=UNIVERSITIES)
+                sch = st.text_input("Manual School Name", ed.get('school', "")) if sch_choice == "Other" else sch_choice
+                
+                # ለከፍተኛ ትምህርት ብቻ የሚታዩ (Field, CGPA, Project)
                 fld_choice = st.selectbox("Field of Study", options=FIELDS_OF_STUDY)
-                fld = st.text_input("Specify Field", "") if fld_choice == "Other" else fld_choice
+                fld = st.text_input("Specify Field", ed.get('field', "")) if fld_choice == "Other" else fld_choice
                 cgpa = st.text_input("CGPA", str(ed.get('cgpa', '0.0')))
                 proj = st.text_area("Final Project/Thesis", ed.get('project', ""))
-            else:
-                fld, cgpa, proj = "General Education", "N/A", ""
+
+            # 3. Year of Completion (ሁልጊዜ ይታያል)
+            gy = st.number_input("Year of Completion", 1990, 2030, int(ed.get('grad_year', 2024)))
+
+            # Save values to UI state for DB submission
+            ui['education_school'] = sch
+            ui['education_degree'] = deg
+            ui['education_field'] = fld
+            ui['education_cgpa'] = cgpa
+            ui['education_project'] = proj
+            ui['education_year'] = gy
 
         # 3. Experience Tab
         with tabs[2]:
@@ -165,11 +181,18 @@ elif page == "Create/Edit CV":
                 r_jb = st.text_input("Ref Job & Company", rf.get('job', ""))
                 r_ph = st.text_input("Ref Phone", rf.get('phone', ""))
 
-        # 5. Skills Tab
+# 5. Skills Tab
         with tabs[4]:
             st.subheader("Skills")
-            sk_val = ", ".join([s['name'] for s in ui.get('skills', [])]) if isinstance(ui.get('skills'), list) else ""
-            skills_in = st.text_input("Skills (comma separated)", sk_val)
+            existing_skills = [s['name'] for s in ui.get('skills', [])] if isinstance(ui.get('skills'), list) else []
+            
+            all_available_options = sorted(list(set(SKILLS_DATABASE + existing_skills)))
+            selected_skills = st.multiselect(
+                "Select or Type to Add New Skills", 
+                options=all_available_options, 
+                default=existing_skills
+            )
+            skills_in = ", ".join(selected_skills)
 
         # 6. Generate Tab
         with tabs[5]:
