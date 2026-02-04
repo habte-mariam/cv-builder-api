@@ -18,47 +18,47 @@ class CVGenerator(FPDF):
         return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
 
     def create_cv(self, data, section_order):
-        self.add_page()
-        
-        # ፎቶው ካለ ወደ ፒዲኤፍ መጨመር
-        profile_pic = data.get("profile_pic")
-        if profile_pic:
-            try:
-                img_data = base64.b64decode(profile_pic)
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
-                    tmp.write(img_data)
-                    tmp_path = tmp.name
-                
-                # ፎቶውን ከላይ ቀኝ በኩል ማስቀመጥ
-                self.image(tmp_path, x=170, y=10, w=30)
-                # ፋይሉን በኋላ ማጥፋት (Cleanup)
-                os.unlink(tmp_path)
-            except Exception as e:
-                print(f"Photo Error: {e}")
+            self.add_page()
+            
+            # 1. መጀመሪያ Header (ቀለሙን) መሳል - ይህ ከፎቶው በፊት መሆን አለበት
+            if self.design in ["creative", "bold", "modern"]:
+                self._draw_colored_header(data)
+            else:
+                self._draw_classic_header(data)
 
-        # 1. Header Logic based on Design
-        if self.design in ["creative", "bold", "modern"]:
-            self._draw_colored_header(data)
-        else:
-            self._draw_classic_header(data)
+            # 2. በመቀጠል ፎቶውን መሳል - አሁን ከቀለሙ በላይ ይሆናል
+            profile_pic = data.get("profile_pic")
+            if profile_pic:
+                try:
+                    import tempfile
+                    import os
+                    img_data = base64.b64decode(profile_pic)
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
+                        tmp.write(img_data)
+                        tmp_path = tmp.name
+                    
+                    # x=170 (በስተቀኝ), y=10 (ከላይ), w=30 (ስፋት)
+                    self.image(tmp_path, x=170, y=10, w=30) 
+                    os.unlink(tmp_path)
+                except Exception as e:
+                    print(f"Photo Error: {e}")
 
-        # 2. Dynamic Section Rendering
-        for section in section_order:
-            if section == "Summary" and data.get('summary'):
-                self._add_summary(data['summary'])
-            elif section == "Experience" and data.get('experience'):
-                self._add_experience(data['experience'])
-            elif section == "Education" and data.get('education'):
-                self._add_education(data['education'])
-            elif section == "Skills" and data.get('skills'):
-                self._add_skills(data['skills'])
-            elif section == "Certificates" and data.get('certificates'):
-                self._add_certificates(data['certificates'])
-            elif section == "References" and data.get('user_references'):
-                self._add_references(data['user_references'])
+            # 3. Dynamic Sections (የቀሩት ክፍሎች)
+            for section in section_order:
+                if section == "Summary" and data.get('summary'):
+                    self._add_summary(data['summary'])
+                elif section == "Experience" and data.get('experience'):
+                    self._add_experience(data['experience'])
+                elif section == "Education" and data.get('education'):
+                    self._add_education(data['education'])
+                elif section == "Skills" and data.get('skills'):
+                    self._add_skills(data['skills'])
+                elif section == "Certificates" and data.get('certificates'):
+                    self._add_certificates(data['certificates'])
+                elif section == "References" and data.get('user_references'):
+                    self._add_references(data['user_references'])
 
-        # Output as bytes for Streamlit
-        return bytes(self.output(dest='S'))
+            return bytes(self.output(dest='S'))
 
     # --- Header Styles ---
     def _draw_colored_header(self, data):
