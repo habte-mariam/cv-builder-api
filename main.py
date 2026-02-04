@@ -117,7 +117,7 @@ elif page == "Create/Edit CV":
                 jt = st.text_input("Current Profession", ui.get("job_title", ""))
                 ph = c1.text_input("Phone", ui.get("phone", ""))
                 ph2 = c2.text_input("Secondary Phone", ui.get("phone2", ""))
-                adr = st.text_input("Address", ui.get("address", ""))
+                adr = st.text_input("Address", ui.get("address", ""), placeholder="አዲስ አበባ፣ ኢትዮጵያ")
                 
                 # Convert age from state for safety
                 try:
