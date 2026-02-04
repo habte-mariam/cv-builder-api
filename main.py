@@ -73,7 +73,7 @@ elif page == "Create/Edit CV":
     ui = st.session_state.ui
     st.title("📝 CV Builder")
 
-    # Photo Upload must be OUTSIDE the form to work properly in Streamlit
+    # ፎቶ ከፎርም ውጭ መሆን አለበት
     st.subheader("Profile Photo")
     uploaded_file = st.file_uploader("Upload Profile Photo", type=["jpg", "jpeg", "png"])
     profile_pic_base64 = ui.get("profile_pic", None)
@@ -82,7 +82,7 @@ elif page == "Create/Edit CV":
         profile_pic_base64 = base64.b64encode(bytes_data).decode("utf-8")
         st.image(bytes_data, width=100)
 
-    # Start the Universal Form
+    # 1. ፎርሙን እዚህ ጋር እንጀምራለን
     with st.form("cv_universal_form"):
         tabs = st.tabs(["👤 Profile", "🎓 Education", "💼 Experience", "🎖 Qualifications", "🛠 Skills", "🚀 Generate"])
         
@@ -101,11 +101,14 @@ elif page == "Create/Edit CV":
             ph2 = c2.text_input("Secondary Phone", ui.get("phone2", ""))
             adr = st.text_input("Address", ui.get("address", ""))
             
-            try:
-                raw_age = str(ui.get("age", 25))
-            except:
-                raw_age = 25
-            age = c1.number_input("Age", min_value=18, max_value=60, value=max(18, str(raw_age) if raw_age.isdigit() else 25))
+# --- የተስተካከለ የ Age Logic ---
+            raw_age = ui.get("age", "25")
+            if isinstance(raw_age, int):
+                clean_age = raw_age
+            else:
+                clean_age = int(raw_age) if str(raw_age).isdigit() else 25
+            
+            age = c1.number_input("Age", min_value=18, max_value=60, value=max(18, clean_age))
             
             gen = c2.selectbox("Gender", ["Male", "Female"], index=0 if ui.get("gender")=="Male" else 1)
             summ = st.text_area("Summary", ui.get("summary", ""), height=120)
