@@ -121,7 +121,7 @@ elif page == "Create/Edit CV":
                 
                 # Convert age from state for safety
                 try:
-                    curr_age = int(ui.get("age", 25))
+                    curr_age = str(ui.get("age", 25))
                 except:
                     curr_age = 25
                 age = c1.number_input("Age", min_value=18, max_value=60, value=curr_age, step=1)
