@@ -106,7 +106,7 @@ elif page == "Create/Edit CV":
             if isinstance(raw_age, int):
                 clean_age = raw_age
             else:
-                clean_age = int(raw_age) if str(raw_age).isdigit() else 25
+                clean_age = int(raw_age) if int(raw_age).isdigit() else 25
             
             age = c1.number_input("Age", min_value=18, max_value=60, value=max(18, clean_age))
             
@@ -255,7 +255,7 @@ elif page == "Create/Edit CV":
                 "experience": [{"company_name": cn, "job_title": ex_jt, "duration": f"{dur} Years", "job_description": desc, "achievements": ach}],
                 "certificates": [{"cert_name": c_nm, "organization": c_org, "year": c_yr}],
                 "user_references": [{"name": r_nm, "job": r_jb, "phone": r_ph}],
-                "skills": [{"name": s.strip()} for s in skills_in.split(",") if s.strip()]
+                "skills": [{"name": s} for s in st.session_state.temp_skills]
             })
 
             generator = CVGenerator(design=design, custom_theme=theme_hex, font_family=font_choice)
