@@ -31,7 +31,14 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.set_page_config(page_title="CV Maker Pro", layout="wide")
 
+# --- Session State Initialization ---
+if "ui" not in st.session_state:
+    st.session_state.ui = {}  # ገና ካልተፈጠረ ባዶ እንዲሆን ማድረግ
+
+if "current_pdf" not in st.session_state:
+    st.session_state.current_pdf = None
 # --- Sidebar: New Modern Layout ---
+
 
 with st.sidebar:
     st.title("🚀 CV Maker Pro")
