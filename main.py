@@ -2,6 +2,7 @@ import streamlit as st
 from supabase import create_client, Client
 from pdf_generator import CVGenerator
 import base64
+from streamlit_option_menu import option_menu 
 import google.generativeai as genai
 from constants import (
     JOB_CATEGORIES, SKILLS_DATABASE, UNIVERSITIES, 
@@ -30,48 +31,56 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.set_page_config(page_title="CV Maker Pro", layout="wide")
 
-# --- Sidebar: Styling & Navigation ---
-st.sidebar.title("🎨 CV Styling")
-with st.sidebar.container(border=True):
-    design = st.sidebar.selectbox("Design Template", 
-        ["creative", "modern", "minimal", "executive", "classic", "corporate", "bold", "elegant", "professional", "compact"])
-    theme_hex = st.sidebar.color_picker("Theme Color", "#2C3E50")
+# --- Sidebar: New Modern Layout ---
 
-with st.sidebar.container(border=True):
-    font_choice = st.sidebar.selectbox("Font Style", ["Arial", "Courier", "Helvetica", "Times"])
-    section_order = st.sidebar.multiselect(
-        "Section Order",
-        ["Summary", "Experience", "Education", "Skills", "Certificates", "References"],
-        default=["Summary", "Experience", "Education", "Skills", "Certificates", "References"]
+with st.sidebar:
+    st.title("🚀 CV Maker Pro")
+    st.divider()
+
+    # 1. Main Navigation (በጥሩ መልክ)
+    # ማሳሰቢያ፡ segmented_control በቅርብ የወጣ የ streamlit feature ነው
+    page = st.segmented_control(
+        "Menu",
+        ["Dashboard", "Create/Edit CV"],
+        icons=["grid", "pencil-square"],
+        default="Dashboard",
+        selection_mode="single"
     )
+    
+    st.divider()
 
-page = st.sidebar.radio("Navigation", ["Dashboard", "Create/Edit CV"])
+    # 2. Design Selection (በExpander ተሰብስቦ)
+    with st.sidebar.expander("🎨 Appearance & Theme", expanded=True):
+        design = st.selectbox(
+            "Choose Template", 
+            ["creative", "modern", "minimal", "executive", "classic", "corporate", "bold", "elegant", "professional", "compact"],
+            help="Select the visual layout of your CV"
+        )
+        
+        theme_hex = st.color_picker("Brand Color", "#2C3E50")
+        font_choice = st.selectbox("Font Family", ["Arial", "Courier", "Helvetica", "Times"])
 
-if "ui" not in st.session_state:
-    st.session_state.ui = {}
-if "current_pdf" not in st.session_state:
-    st.session_state.current_pdf = None
+    # 3. Layout Control
+    with st.sidebar.expander("🏗️ CV Structure"):
+        st.write("Drag and reorder sections:")
+        section_order = st.multiselect(
+            "Display Sections",
+            ["Summary", "Experience", "Education", "Skills", "Certificates", "References"],
+            default=["Summary", "Experience", "Education", "Skills", "Certificates", "References"]
+        )
 
-# --- Dashboard ---
+    st.divider()
+    st.caption("v2.0 | Powered by Gemini AI")
+
+# --- Content Logic (እንደቀድሞው ይቀጥላል) ---
 if page == "Dashboard":
     st.title("📊 User Dashboard")
-    email_q = st.text_input("Enter your email to load CV")
-    if email_q:
-        res = supabase.table("profiles").select("*, education(*), experience(*), skills(*), languages(*), certificates(*), user_references(*)").eq("email", email_q).execute()
-        if res.data:
-            for user in res.data:
-                with st.container(border=True):
-                    st.subheader(f"📄 {user['first_name']} {user['last_name']}")
-                    st.caption(f"Role: {user['job_title']}")
-                    if st.button("Edit this CV", key=user['id']):
-                        st.session_state.ui = user
-                        st.success("Data loaded! Go to 'Create/Edit CV' page.")
-        else: st.warning("No records found.")
-
-# --- Create/Edit CV ---
+    # ... (የቀረው የDashboard ኮድ)
+    
 elif page == "Create/Edit CV":
     ui = st.session_state.ui
     st.title("📝 CV Builder")
+    # ... (የቀረው የCreate CV ኮድ)
 
     # ፎቶ ከፎርም ውጭ መሆን አለበት
     st.subheader("Profile Photo")
