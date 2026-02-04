@@ -28,48 +28,51 @@ def get_ai_suggestion(prompt):
 
 # --- Supabase Setup ---
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
 st.set_page_config(page_title="CV Maker Pro", layout="wide")
 
-# --- Session State Initialization ---
+# --- 1. Session State Initialization ---
+# ገጹ መጀመሪያ ሲከፈት ዳሽቦርድ ላይ እንዲሆን እና ባዶ ዳታ እንዲይዝ
+if "page" not in st.session_state:
+    st.session_state.page = "Dashboard"
+
 if "ui" not in st.session_state:
-    st.session_state.ui = {}  # ገና ካልተፈጠረ ባዶ እንዲሆን ማድረግ
+    st.session_state.ui = {} 
 
 if "current_pdf" not in st.session_state:
     st.session_state.current_pdf = None
-# --- Sidebar: New Modern Layout ---
 
-
+# --- 2. Sidebar Layout ---
 with st.sidebar:
     st.title("🚀 CV Maker Pro")
     st.divider()
 
-    # 1. Main Navigation (በጥሩ መልክ)
-    # ማሳሰቢያ፡ segmented_control በቅርብ የወጣ የ streamlit feature ነው
-with st.sidebar:
-    page = option_menu(
+    # ገጹን ለመቀየር option_menu መጠቀም (ዘመናዊ ስለሆነ)
+    # index የሚወሰነው በ session_state.page ነው (ከዳሽቦርድ ወደ ኤዲት ለመሸጋገር ይረዳል)
+    page_selection = option_menu(
         menu_title="Menu",
         options=["Dashboard", "Create/Edit CV"],
         icons=["grid", "pencil-square"],
         menu_icon="cast",
-        default_index=0,
+        default_index=0 if st.session_state.page == "Dashboard" else 1,
     )
+    
+    # ተጠቃሚው የመረጠውን ገጽ በ session_state ውስጥ መመዝገብ
+    st.session_state.page = page_selection
     
     st.divider()
 
     # 2. Design Selection (በExpander ተሰብስቦ)
-    with st.sidebar.expander("🎨 Appearance & Theme", expanded=True):
+    with st.expander("🎨 Appearance & Theme", expanded=True):
         design = st.selectbox(
             "Choose Template", 
             ["creative", "modern", "minimal", "executive", "classic", "corporate", "bold", "elegant", "professional", "compact"],
             help="Select the visual layout of your CV"
         )
-        
         theme_hex = st.color_picker("Brand Color", "#2C3E50")
         font_choice = st.selectbox("Font Family", ["Arial", "Courier", "Helvetica", "Times"])
 
     # 3. Layout Control
-    with st.sidebar.expander("🏗️ CV Structure"):
+    with st.expander("🏗️ CV Structure"):
         st.write("Drag and reorder sections:")
         section_order = st.multiselect(
             "Display Sections",
@@ -80,26 +83,20 @@ with st.sidebar:
     st.divider()
     st.caption("v2.0 | Powered by HabTech")
 
-# --- Content Logic (እንደቀድሞው ይቀጥላል) ---
-# --- Dashboard ---
-if page == "Dashboard":
+# --- 3. Content Logic (ከገጽ ምርጫው ጋር የተያያዘ) ---
+if st.session_state.page == "Dashboard":
     st.title("📊 User Dashboard")
     
-    # የፍለጋ ክፍል በካርድ መልክ (Container)
     with st.container(border=True):
         st.subheader("🔍 Find Your CV")
         st.write("Enter your email address to retrieve and manage your saved resumes.")
         
-        # ሰርች ባሩን እና በተኑን ጎን ለጎን ለማድረግ ኮለም መጠቀም
         col1, col2 = st.columns([4, 1]) 
-        
         with col1:
             email_q = st.text_input("Email Address", placeholder="example@email.com", label_visibility="collapsed")
-        
         with col2:
             search_clicked = st.button("Search Now 🔎", use_container_width=True, type="primary")
 
-    # ፍለጋው ሲነካ ወይም ኢንተር ሲባል የሚሰራው ሎጂክ
     if search_clicked or (email_q and not search_clicked):
         if email_q:
             with st.spinner("Fetching your records..."):
@@ -107,9 +104,6 @@ if page == "Dashboard":
                 
                 if res.data:
                     st.divider()
-                    st.success(f"Found {len(res.data)} record(s) for {email_q}")
-                    
-                    # ውጤቶቹን በጥሩ ካርድ መልክ ማሳየት
                     for user in res.data:
                         with st.container(border=True):
                             c1, c2 = st.columns([3, 1])
@@ -118,21 +112,24 @@ if page == "Dashboard":
                                 st.caption(f"🎯 **Role:** {user.get('job_title', 'Not Specified')} | 📍 {user.get('address', '')}")
                             
                             with c2:
-                                st.write("") # ለቦታ ማስተካከያ
+                                st.write("") 
                                 if st.button("📝 Edit CV", key=f"edit_{user['id']}", use_container_width=True):
+                                    # እዚህ ጋር ነው ለውጡ ያለው!
                                     st.session_state.ui = user
-                                    st.success("Data loaded! Switch to 'Create/Edit CV'")
-                                    st.balloons()
+                                    st.session_state.page = "Create/Edit CV" # ገጹን ቀይር
+                                    st.rerun() # ወዲያውኑ ገጹን አድስ
                 else:
-                    st.warning("⚠️ No records found with this email. Please check and try again.")
-        else:
-            if search_clicked:
-                st.error("Please enter an email address first!")
-    
-elif page == "Create/Edit CV":
-    ui = st.session_state.ui
+                    st.warning("⚠️ No records found.")
+
+# --- 4. Create/Edit Page ---
+elif st.session_state.page == "Create/Edit CV":
+    ui = st.session_state.get("ui", {})
     st.title("📝 CV Builder")
-    # ... (የቀረው የCreate CV ኮድ)
+    
+    if not ui:
+        st.info("💡 Please start by loading a CV from the Dashboard or enter your details below.")
+    
+    # የቀረው የፎርም ኮድህ እዚህ ይቀጥላል...
 
     # ፎቶ ከፎርም ውጭ መሆን አለበት
     st.subheader("Profile Photo")
