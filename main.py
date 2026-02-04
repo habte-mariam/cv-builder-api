@@ -181,13 +181,23 @@ elif page == "Create/Edit CV":
                 c_org = st.selectbox("Issuing Organization", ISSUING_ORGANIZATIONS)
                 c_nm = st.selectbox("Certificate Name", CERTIFICATE_NAMES)
                 c_yr = st.number_input("Year", 2000, 2030, 2025)
-            with col_b:
-                st.subheader("References")
-                ref_list = ui.get('user_references', [{}])
-                rf = ref_list[0] if ref_list else {}
-                r_nm = st.text_input("Ref Name", rf.get('name', ""))
-                r_jb = st.text_input("Ref Job", rf.get('job', ""))
-                r_ph = st.text_input("Ref Phone", rf.get('phone', ""))
+        with col_b:
+                            st.subheader("References")
+                            ref_list = ui.get('user_references', [])
+                            
+                            # Safe check for list index
+                            if isinstance(ref_list, list) and len(ref_list) > 0:
+                                rf = ref_list[0]
+                            else:
+                                rf = {}
+                                
+                            r_nm = st.text_input("Full Name", rf.get('name', ""), placeholder="e.g. Dr. Abebe Kebede")
+                            r_jb = st.text_input("Job Title & Company", rf.get('job', ""), placeholder="e.g. Manager at Ethio Telecom")
+                            r_ph = st.text_input("Phone Number", rf.get('phone', ""), placeholder="e.g. +251 911 00 00 00")
+
+                            ui['ref_name'] = r_nm
+                            ui['ref_job'] = r_jb
+                            ui['ref_phone'] = r_ph
 
         # 5. Skills Tab
         with tabs[4]:
