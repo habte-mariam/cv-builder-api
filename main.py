@@ -186,16 +186,49 @@ elif page == "Create/Edit CV":
 
 # 5. Skills Tab
         with tabs[4]:
-            st.subheader("Skills")
-            existing_skills = [s['name'] for s in ui.get('skills', [])] if isinstance(ui.get('skills'), list) else []
+            st.subheader("🛠 Professional Skills")
             
-            all_available_options = sorted(list(set(SKILLS_DATABASE + existing_skills)))
+            # 1. ዳታቤዝ ውስጥ ያሉትን ክህሎቶች ማግኘት
+            existing_skills = [s['name'] for s in ui.get('skills', [])] if isinstance(ui.get('skills'), list) else []
+
+            # 2. የክህሎት ዘርፉን ማስመረጥ (Category Selection)
+            skill_categories = list(SKILLS_DATABASE.keys())
+            selected_cat = st.selectbox("Choose Skill Category", options=["All"] + skill_categories)
+
+            # 3. እንደ ተመረጠው ዘርፍ ዝርዝሩን ማጣራት (Filtering)
+            if selected_cat == "All":
+                # ሁሉንም ዘርፎች ማሳየት
+                category_options = [skill for sublist in SKILLS_DATABASE.values() for skill in sublist]
+            else:
+                # የተመረጠውን ዘርፍ ብቻ ማሳየት
+                category_options = SKILLS_DATABASE.get(selected_cat, [])
+
+            # 4. አዳዲስ በእጅ የተጨመሩ ክህሎቶች ካሉ በዝርዝሩ ውስጥ እንዲታዩ ማድረግ
+            all_available_options = sorted(list(set(category_options + existing_skills)))
+
+            # 5. Dynamic Multiselect
             selected_skills = st.multiselect(
-                "Select or Type to Add New Skills", 
+                f"Select Skills from {selected_cat}", 
                 options=all_available_options, 
-                default=existing_skills
+                default=[s for s in existing_skills if s in all_available_options]
             )
-            skills_in = ", ".join(selected_skills)
+
+            # ጠቃሚ ማሳሰቢያ፡ ተጠቃሚው ዘርፍ ሲቀያይር የድሮ ምርጫው እንዳይጠፋ
+            # ሁሉንም የተመረጡ ክህሎቶች በ session_state ማዋሃድ አስፈላጊ ሊሆን ይችላል።
+            if 'global_skills' not in st.session_state:
+                st.session_state.global_skills = existing_skills
+
+            # አዲስ የተመረጡትን ወደ global ዝርዝር መጨመር
+            for s in selected_skills:
+                if s not in st.session_state.global_skills:
+                    st.session_state.global_skills.append(s)
+            
+            # የተሰረዙ ካሉ ከ global ዝርዝር መቀነስ
+            st.session_state.global_skills = [s for s in st.session_state.global_skills if s in selected_skills or s not in all_available_options]
+
+            skills_in = ", ".join(st.session_state.global_skills)
+            
+            st.info(f"Selected Skills: {skills_in}")
 
         # 6. Generate Tab
         with tabs[5]:

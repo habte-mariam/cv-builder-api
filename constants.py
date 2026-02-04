@@ -36,12 +36,95 @@ JOB_CATEGORIES = {
     "Other Industries": ["Other"]
 }
 
-SKILLS_DATABASE = [
-    "Python", "Java", "JavaScript", "C++", "SQL", "React", "Node.js", "Flutter", "Dart",
-    "Project Management", "Data Analysis", "Machine Learning", "Graphic Design", "Leadership",
-    "Customer Service", "Critical Thinking", "Teamwork", "Public Speaking", "Microsoft Office",
-    "Accounting Software", "AutoCAD", "GIS", "Stata", "SPSS", "Digital Marketing", "SEO"
-]
+SKILLS_DATABASE = {
+    "Software & IT": [
+        "Python", "JavaScript", "Java", "C++", "C#", "PHP", "Ruby", "Swift", "Kotlin", "Go",
+        "React.js", "Angular", "Vue.js", "Next.js", "HTML5", "CSS3", "Tailwind CSS", "Bootstrap",
+        "Node.js", "Django", "Flask", "Laravel", "Spring Boot", "ASP.NET", "FastAPI",
+        "PostgreSQL", "MySQL", "MongoDB", "Redis", "Oracle", "Firebase", "Supabase",
+        "AWS", "Azure", "Google Cloud", "Docker", "Kubernetes", "CI/CD", "Terraform",
+        "Git", "GitHub", "Linux/Unix", "Cybersecurity", "Ethical Hacking", "Network Admin",
+        "Data Science", "Machine Learning", "AI", "Pandas", "NumPy", "TensorFlow", "PyTorch",
+        "Mobile App Development", "Flutter", "React Native", "UI/UX Design", "Figma", "Adobe XD"
+    ],
+    "Business & Management": [
+        "Project Management", "Agile/Scrum", "Business Analysis", "Strategic Planning", "Leadership",
+        "Operations Management", "Supply Chain Management", "Logistics", "Risk Management",
+        "Accounting", "Financial Analysis", "Taxation", "Auditing", "QuickBooks", "Peachtree",
+        "Human Resources (HR)", "Recruitment", "Employee Relations", "Payroll Management",
+        "Sales & Marketing", "Digital Marketing", "SEO", "Social Media Management", "Content Strategy",
+        "Public Relations", "Customer Relationship Management (CRM)", "Salesforce", "Market Research",
+        "Business Development", "Contract Negotiation", "Entrepreneurship", "Public Speaking"
+    ],
+    "Healthcare": [
+        "Nursing", "Patient Care", "First Aid & CPR", "Clinical Diagnostics", "Medical Coding",
+        "Health Information Management", "Pharmacy Practice", "Pharmacology", "Public Health",
+        "Emergency Medicine", "Surgery Assistance", "Laboratory Skills", "Radiology",
+        "Physical Therapy", "Mental Health Counseling", "Anatomy", "Physiology", "Medical Ethics",
+        "Hospital Administration", "Infection Control", "Nutrition & Dietetics"
+    ],
+    "Engineering & Technical": [
+        "Civil Engineering", "Structural Design", "AutoCAD", "ArchiCAD", "Revit", "GIS",
+        "Electrical Engineering", "Circuit Design", "Power Systems", "PLC Programming",
+        "Mechanical Engineering", "SolidWorks", "Thermodynamics", "Manufacturing Processes",
+        "Chemical Engineering", "Process Control", "Quality Assurance (QA)", "ISO Standards",
+        "Technical Writing", "Surveying", "Construction Management", "Renewable Energy Systems"
+    ],
+    "Language & Communication": [
+        "English (Fluent)", "Amharic (Native)", "Oromiffa", "Tigrinya", "French", "Arabic", "Chinese",
+        "Technical Communication", "Interpersonal Skills", "Conflict Resolution", "Translation",
+        "Report Writing", "Presentation Skills", "Teamwork", "Customer Service", "Emotional Intelligence"
+    ],
+    "Office & Administration": [
+        "Microsoft Word", "Microsoft Excel (Advanced)", "Microsoft PowerPoint", "Data Entry",
+        "Office Management", "Scheduling & Calendar Management", "Record Keeping",
+        "Transcription", "Virtual Assistance", "Email Communication", "Typing Speed (60+ WPM)"
+    ],
+    
+    "General Soft Skills": [
+        # Communication
+        "Verbal Communication", "Written Communication", "Active Listening", "Public Speaking", 
+        "Presentation Skills", "Interpersonal Skills", "Negotiation", "Persuasion", "Storytelling",
+        "Constructive Feedback", "Technical Writing", "Grant Writing", "Editing", "Proofreading",
+        "Cross-Cultural Communication", "Diplomacy", "Clarifying", "Non-Verbal Communication",
+        # Leadership & Management
+        "Leadership", "Team Management", "Conflict Resolution", "Decision Making", "Strategic Thinking",
+        "Mentoring", "Coaching", "Delegation", "Crisis Management", "Change Management", "Goal Setting",
+        "Performance Management", "Project Planning", "Meeting Facilitation", "Talent Development",
+        "Inspirational Leadership", "Remote Team Management", "Inclusivity", "Empowerment",
+        # Thinking & Problem Solving
+        "Critical Thinking", "Problem Solving", "Analytical Reasoning", "Creativity", "Innovation",
+        "Logical Reasoning", "Design Thinking", "Strategic Planning", "Cognitive Flexibility",
+        "Information Processing", "Conceptual Thinking", "Intuition", "Root Cause Analysis",
+        # Emotional Intelligence (EQ)
+        "Emotional Intelligence", "Self-Awareness", "Self-Regulation", "Empathy", "Social Skills",
+        "Relationship Management", "Patience", "Resilience", "Compassion", "Cultural Sensitivity",
+        "Stress Management", "Emotional Control", "Adaptability", "Trust Building",
+        # Professionalism & Work Ethic
+        "Time Management", "Prioritization", "Organization", "Work Ethic", "Integrity", "Reliability",
+        "Dependability", "Attention to Detail", "Multi-tasking", "Punctuality", "Discipline",
+        "Accountability", "Professionalism", "Ethical Conduct", "Discretion", "Growth Mindset",
+        "Self-Motivation", "Lifelong Learning", "Resourcefulness", "Professional Networking",
+        # Collaboration & Teamwork
+        "Teamwork", "Collaboration", "Virtual Collaboration", "Peer Support", "Knowledge Sharing",
+        "Cooperation", "Team Building", "Group Dynamics", "Consensus Building", "Remote Work Proficiency",
+        # Customer & Client Relations
+        "Customer Service", "Customer Experience (CX)", "Client Management", "Conflict De-escalation",
+        "Patient Advocacy", "Salesmanship", "Service Orientation", "Community Outreach", "Public Relations",
+        "Building Rapport", "Account Management", "Satisfaction Surveys",
+        # Personal Productivity & Others
+        "Planning", "Focus", "Efficiency", "Continuous Improvement", "Curiosity", "Independent Work",
+        "Stress Tolerance", "Goal Orientation", "Decision Quality", "Active Learning", "Critical Observation",
+        "Digital Literacy", "Information Literacy", "Online Research", "Data Interpretation", "Tech-Savviness"
+    ],
+    
+    "Creative & Arts": [
+        "Graphic Design", "Adobe Photoshop", "Adobe Illustrator", "InDesign", "Video Editing",
+        "Adobe Premiere Pro", "After Effects", "Photography", "Animation", "Copywriting",
+        "Creative Writing", "Interior Design", "Fashion Design", "Music Production"
+    ]
+    
+}
 
 # constants.py ውስጥ ጨምር
 

@@ -24,7 +24,7 @@ CREATE TABLE profiles (
     phone2 TEXT,
     address TEXT,
     summary TEXT,
-    age TEXT,
+    age int,
     gender TEXT,
     nationality TEXT,
     linkedin TEXT,
