@@ -178,7 +178,7 @@ elif st.session_state.page == "Create/Edit CV":
             age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
             
             # 4. እድሜውን በቁጥር እንዲያይ ማድረግ (Read-only)
-            st.info(f"Your calculated age is: **{age}**")
+            st.info(f"Age: **{age}**")
             
             gen = c2.selectbox("Gender", ["Male", "Female"], index=0 if ui.get("gender")=="Male" else 1)
             summ = st.text_area("Summary", ui.get("summary", ""), height=120)
