@@ -81,9 +81,53 @@ with st.sidebar:
     st.caption("v2.0 | Powered by Gemini AI")
 
 # --- Content Logic (እንደቀድሞው ይቀጥላል) ---
+# --- Dashboard ---
 if page == "Dashboard":
     st.title("📊 User Dashboard")
-    # ... (የቀረው የDashboard ኮድ)
+    
+    # የፍለጋ ክፍል በካርድ መልክ (Container)
+    with st.container(border=True):
+        st.subheader("🔍 Find Your CV")
+        st.write("Enter your email address to retrieve and manage your saved resumes.")
+        
+        # ሰርች ባሩን እና በተኑን ጎን ለጎን ለማድረግ ኮለም መጠቀም
+        col1, col2 = st.columns([4, 1]) 
+        
+        with col1:
+            email_q = st.text_input("Email Address", placeholder="example@email.com", label_visibility="collapsed")
+        
+        with col2:
+            search_clicked = st.button("Search Now 🔎", use_container_width=True, type="primary")
+
+    # ፍለጋው ሲነካ ወይም ኢንተር ሲባል የሚሰራው ሎጂክ
+    if search_clicked or (email_q and not search_clicked):
+        if email_q:
+            with st.spinner("Fetching your records..."):
+                res = supabase.table("profiles").select("*, education(*), experience(*), skills(*), languages(*), certificates(*), user_references(*)").eq("email", email_q).execute()
+                
+                if res.data:
+                    st.divider()
+                    st.success(f"Found {len(res.data)} record(s) for {email_q}")
+                    
+                    # ውጤቶቹን በጥሩ ካርድ መልክ ማሳየት
+                    for user in res.data:
+                        with st.container(border=True):
+                            c1, c2 = st.columns([3, 1])
+                            with c1:
+                                st.markdown(f"### 📄 {user['first_name']} {user['last_name']}")
+                                st.caption(f"🎯 **Role:** {user.get('job_title', 'Not Specified')} | 📍 {user.get('address', '')}")
+                            
+                            with c2:
+                                st.write("") # ለቦታ ማስተካከያ
+                                if st.button("📝 Edit CV", key=f"edit_{user['id']}", use_container_width=True):
+                                    st.session_state.ui = user
+                                    st.success("Data loaded! Switch to 'Create/Edit CV'")
+                                    st.balloons()
+                else:
+                    st.warning("⚠️ No records found with this email. Please check and try again.")
+        else:
+            if search_clicked:
+                st.error("Please enter an email address first!")
     
 elif page == "Create/Edit CV":
     ui = st.session_state.ui
