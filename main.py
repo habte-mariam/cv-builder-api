@@ -33,13 +33,13 @@ st.set_page_config(page_title="CV Maker Pro", layout="wide")
 # --- Sidebar: Styling & Navigation ---
 st.sidebar.title("🎨 CV Styling")
 with st.sidebar.container(border=True):
-    design = st.selectbox("Design Template", 
+    design = st.sidebar.selectbox("Design Template", 
         ["creative", "modern", "minimal", "executive", "classic", "corporate", "bold", "elegant", "professional", "compact"])
-    theme_hex = st.color_picker("Theme Color", "#2C3E50")
+    theme_hex = st.sidebar.color_picker("Theme Color", "#2C3E50")
 
 with st.sidebar.container(border=True):
-    font_choice = st.selectbox("Font Style", ["Arial", "Courier", "Helvetica", "Times"])
-    section_order = st.multiselect(
+    font_choice = st.sidebar.selectbox("Font Style", ["Arial", "Courier", "Helvetica", "Times"])
+    section_order = st.sidebar.multiselect(
         "Section Order",
         ["Summary", "Experience", "Education", "Skills", "Certificates", "References"],
         default=["Summary", "Experience", "Education", "Skills", "Certificates", "References"]
@@ -73,20 +73,22 @@ elif page == "Create/Edit CV":
     ui = st.session_state.ui
     st.title("📝 CV Builder")
 
-    # Creating 6 Tabs - The last one is for Generation & Preview
-    tabs = st.tabs(["👤 Profile", "🎓 Education", "💼 Experience", "🎖 Qualifications", "🛠 Skills", "🚀 Generate"])
-    
+    # Photo Upload must be OUTSIDE the form to work properly in Streamlit
+    st.subheader("Profile Photo")
+    uploaded_file = st.file_uploader("Upload Profile Photo", type=["jpg", "jpeg", "png"])
+    profile_pic_base64 = ui.get("profile_pic", None)
+    if uploaded_file:
+        bytes_data = uploaded_file.getvalue()
+        profile_pic_base64 = base64.b64encode(bytes_data).decode("utf-8")
+        st.image(bytes_data, width=100)
+
+    # Start the Universal Form
     with st.form("cv_universal_form"):
+        tabs = st.tabs(["👤 Profile", "🎓 Education", "💼 Experience", "🎖 Qualifications", "🛠 Skills", "🚀 Generate"])
+        
         # 1. Profile Tab
         with tabs[0]:
             st.subheader("Personal Information")
-            uploaded_file = st.file_uploader("Upload Profile Photo", type=["jpg", "jpeg", "png"])
-            profile_pic_base64 = ui.get("profile_pic", None)
-            if uploaded_file:
-                bytes_data = uploaded_file.getvalue()
-                profile_pic_base64 = base64.b64encode(bytes_data).decode("utf-8")
-                st.image(bytes_data, width=100)
-
             c1, c2 = st.columns(2)
             fn = c1.text_input("First Name", ui.get("first_name", ""))
             ln = c2.text_input("Last Name", ui.get("last_name", ""))
@@ -99,7 +101,6 @@ elif page == "Create/Edit CV":
             ph2 = c2.text_input("Secondary Phone", ui.get("phone2", ""))
             adr = st.text_input("Address", ui.get("address", ""))
             
-            # Safe Age Logic
             try:
                 raw_age = int(ui.get("age", 25))
             except:
@@ -109,66 +110,41 @@ elif page == "Create/Edit CV":
             gen = c2.selectbox("Gender", ["Male", "Female"], index=0 if ui.get("gender")=="Male" else 1)
             summ = st.text_area("Summary", ui.get("summary", ""), height=120)
 
-# 2. Education Tab (Safe & Conditional)
+        # 2. Education Tab
         with tabs[1]:
             st.subheader("Academic Background")
             edu_list = ui.get('education', [])
             ed = edu_list[0] if isinstance(edu_list, list) and len(edu_list) > 0 else {}
-
-            # Define school levels for the logic
             school_levels = ["Grade 1-8", "Grade 9-10", "Grade 11-12"]
             
-            # Level Selection
             current_deg = ed.get('degree', "Bachelor's Degree")
-            deg = st.selectbox("Level of Education", 
-                               options=DEGREE_TYPES, 
+            deg = st.selectbox("Level of Education", options=DEGREE_TYPES, 
                                index=DEGREE_TYPES.index(current_deg) if current_deg in DEGREE_TYPES else 0)
 
-            # --- Universal Fields (Always Shown) ---
             sch_choice = st.selectbox("School/University", options=UNIVERSITIES)
             sch = st.text_input("Manual School Name", "") if sch_choice == "Other" else sch_choice
-            
             gy = st.number_input("Year of Completion", 1990, 2030, int(ed.get('grad_year', 2024)))
 
-            # --- Conditional Fields (Hidden for School Levels) ---
             if deg not in school_levels:
-                # These fields only appear for Diploma, Degree, etc.
                 fld_choice = st.selectbox("Field of Study", options=FIELDS_OF_STUDY)
                 fld = st.text_input("Specify Field", "") if fld_choice == "Other" else fld_choice
-                
                 cgpa = st.text_input("CGPA", str(ed.get('cgpa', '0.0')))
                 proj = st.text_area("Final Project/Thesis", ed.get('project', ""))
-                
-                # Store in UI state
-                ui['education_field'] = fld
-                ui['education_cgpa'] = cgpa
-                ui['education_project'] = proj
             else:
-                # Set default values for school levels to prevent DB/PDF issues
-                ui['education_field'] = "General Education"
-                ui['education_cgpa'] = "N/A"
-                ui['education_project'] = ""
+                fld, cgpa, proj = "General Education", "N/A", ""
 
-            # Core fields mapping
-            ui['education_school'] = sch
-            ui['education_degree'] = deg
-            ui['education_year'] = gy
-
-        # 3. Experience Tab (Safe)
+        # 3. Experience Tab
         with tabs[2]:
             st.subheader("Work History")
             exp_list = ui.get('experience', [])
             ex = exp_list[0] if isinstance(exp_list, list) and len(exp_list) > 0 else {}
-            
             cn = st.text_input("Company Name", ex.get('company_name', ""))
             ex_jt = st.text_input("Position", ex.get('job_title', ""))
             
-            # Safe duration conversion
             try:
                 raw_dur = int(''.join(filter(str.isdigit, str(ex.get('duration', '0')))))
             except:
                 raw_dur = 0
-                
             dur = st.number_input("Years of Experience", 0, 40, raw_dur)
             desc = st.text_area("Description", ex.get('job_description', ""))
             ach = st.text_area("Key Achievements", ex.get('achievements', ""))
@@ -181,23 +157,13 @@ elif page == "Create/Edit CV":
                 c_org = st.selectbox("Issuing Organization", ISSUING_ORGANIZATIONS)
                 c_nm = st.selectbox("Certificate Name", CERTIFICATE_NAMES)
                 c_yr = st.number_input("Year", 2000, 2030, 2025)
-        with col_b:
-                            st.subheader("References")
-                            ref_list = ui.get('user_references', [])
-                            
-                            # Safe check for list index
-                            if isinstance(ref_list, list) and len(ref_list) > 0:
-                                rf = ref_list[0]
-                            else:
-                                rf = {}
-                                
-                            r_nm = st.text_input("Full Name", rf.get('name', ""), placeholder="e.g. Dr. Abebe Kebede")
-                            r_jb = st.text_input("Job Title & Company", rf.get('job', ""), placeholder="e.g. Manager at Ethio Telecom")
-                            r_ph = st.text_input("Phone Number", rf.get('phone', ""), placeholder="e.g. +251 911 00 00 00")
-
-                            ui['ref_name'] = r_nm
-                            ui['ref_job'] = r_jb
-                            ui['ref_phone'] = r_ph
+            with col_b:
+                st.subheader("References")
+                ref_list = ui.get('user_references', [])
+                rf = ref_list[0] if isinstance(ref_list, list) and len(ref_list) > 0 else {}
+                r_nm = st.text_input("Ref Full Name", rf.get('name', ""))
+                r_jb = st.text_input("Ref Job & Company", rf.get('job', ""))
+                r_ph = st.text_input("Ref Phone", rf.get('phone', ""))
 
         # 5. Skills Tab
         with tabs[4]:
@@ -205,53 +171,53 @@ elif page == "Create/Edit CV":
             sk_val = ", ".join([s['name'] for s in ui.get('skills', [])]) if isinstance(ui.get('skills'), list) else ""
             skills_in = st.text_input("Skills (comma separated)", sk_val)
 
-        # 6. Generate Tab (Submit & Full Preview)
+        # 6. Generate Tab
         with tabs[5]:
-            st.info("Check all details before generating your final CV.")
+            st.info("Ensure all data is correct before proceeding.")
             submit = st.form_submit_button("🚀 Save Data & Generate Full Preview", use_container_width=True)
 
-            if submit:
-                try:
-                    profile_payload = {
-                        "profile_pic": profile_pic_base64, "email": em, "first_name": fn, "last_name": ln, 
-                        "job_title": jt, "phone": ph, "phone2": ph2, "address": adr, "age": str(age),
-                        "gender": gen, "summary": summ
-                    }
-                    res = supabase.table("profiles").upsert(profile_payload, on_conflict="email").execute()
-                    p_id = res.data[0]['id']
+    # Logic after form submission
+    if submit:
+        try:
+            profile_payload = {
+                "profile_pic": profile_pic_base64, "email": em, "first_name": fn, "last_name": ln, 
+                "job_title": jt, "phone": ph, "phone2": ph2, "address": adr, "age": str(age),
+                "gender": gen, "summary": summ
+            }
+            res = supabase.table("profiles").upsert(profile_payload, on_conflict="email").execute()
+            p_id = res.data[0]['id']
 
-                    # Save related tables
-                    supabase.table("education").upsert({"profile_id": p_id, "school": sch, "degree": deg, "field": fld, "grad_year": gy, "cgpa": str(cgpa), "project": proj}, on_conflict="profile_id").execute()
-                    supabase.table("experience").upsert({"profile_id": p_id, "company_name": cn, "job_title": ex_jt, "duration": f"{dur} Years", "job_description": desc, "achievements": ach}, on_conflict="profile_id").execute()
-                    
-                    # Prep data for PDF
-                    full_data = profile_payload
-                    full_data.update({
-                        "education": [{"school": sch, "degree": deg, "field": fld, "grad_year": gy, "cgpa": cgpa}],
-                        "experience": [{"company_name": cn, "job_title": ex_jt, "duration": f"{dur} Years", "job_description": desc, "achievements": ach}],
-                        "certificates": [{"cert_name": c_nm, "organization": c_org, "year": c_yr}],
-                        "user_references": [{"name": r_nm, "job": r_jb, "phone": r_ph}],
-                        "skills": [{"name": s.strip()} for s in skills_in.split(",") if s.strip()]
-                    })
+            supabase.table("education").upsert({"profile_id": p_id, "school": sch, "degree": deg, "field": fld, "grad_year": gy, "cgpa": str(cgpa), "project": proj}, on_conflict="profile_id").execute()
+            supabase.table("experience").upsert({"profile_id": p_id, "company_name": cn, "job_title": ex_jt, "duration": f"{dur} Years", "job_description": desc, "achievements": ach}, on_conflict="profile_id").execute()
+            
+            full_data = profile_payload
+            full_data.update({
+                "education": [{"school": sch, "degree": deg, "field": fld, "grad_year": gy, "cgpa": cgpa}],
+                "experience": [{"company_name": cn, "job_title": ex_jt, "duration": f"{dur} Years", "job_description": desc, "achievements": ach}],
+                "certificates": [{"cert_name": c_nm, "organization": c_org, "year": c_yr}],
+                "user_references": [{"name": r_nm, "job": r_jb, "phone": r_ph}],
+                "skills": [{"name": s.strip()} for s in skills_in.split(",") if s.strip()]
+            })
 
-                    generator = CVGenerator(design=design, custom_theme=theme_hex, font_family=font_choice)
-                    st.session_state.current_pdf = generator.create_cv(full_data, section_order)
-                    st.success("✅ CV Generated Successfully!")
-                except Exception as e:
-                    st.error(f"Error: {e}")
+            generator = CVGenerator(design=design, custom_theme=theme_hex, font_family=font_choice)
+            st.session_state.current_pdf = generator.create_cv(full_data, section_order)
+            st.success("✅ CV Generated Successfully!")
+            st.rerun() # Refresh to show PDF below
+        except Exception as e:
+            st.error(f"Error: {e}")
 
-            # --- Full Preview Section in Tab 6 ---
-            if st.session_state.current_pdf:
-                st.divider()
-                pdf_bytes = bytes(st.session_state.current_pdf)
-                base64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
-                pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="1000px" style="border-radius:10px; border:none;"></iframe>'
-                st.markdown(pdf_display, unsafe_allow_html=True)
-                
-                st.download_button(
-                    label="📥 Download Professional CV",
-                    data=pdf_bytes,
-                    file_name=f"{fn}_{ln}_CV.pdf",
-                    mime="application/pdf",
-                    use_container_width=True
-                )
+    # Display PDF below everything if it exists
+    if st.session_state.current_pdf:
+        st.divider()
+        pdf_bytes = bytes(st.session_state.current_pdf)
+        base64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+        pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="1000px" style="border-radius:10px; border:none;"></iframe>'
+        st.markdown(pdf_display, unsafe_allow_html=True)
+        
+        st.download_button(
+            label="📥 Download Professional CV",
+            data=pdf_bytes,
+            file_name=f"{fn}_{ln}_CV.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
