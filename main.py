@@ -3,6 +3,7 @@ from supabase import create_client, Client
 from pdf_generator import CVGenerator
 import base64
 import google.generativeai as genai
+from constants import JOB_CATEGORIES, SKILLS_DATABASE
 
 # --- Supabase & Gemini API Key Setup ---
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
@@ -69,6 +70,7 @@ elif page == "Create/Edit CV":
         tabs = st.tabs(["👤 Profile", "🎓 Education", "💼 Experience", "🎖 Qualifications", "🛠 Skills"])
         
         # 1. Profile Tab
+        
         with tabs[0]:
             # ፎቶ መጫኛ
             uploaded_file = st.file_uploader("የፕሮፋይል ፎቶ ይምረጡ (JPG/PNG)", type=["jpg", "jpeg", "png"])
@@ -101,6 +103,20 @@ elif page == "Create/Edit CV":
         # ዋናው ዳታ መሙያ ፎርም
         with st.form("cv_universal_form"):
             with tabs[0]: # Profile Fields
+                
+                category = st.selectbox("Select Department", options=list(JOB_CATEGORIES.keys()))
+    
+    # 2. በዲፓርትመንቱ ስር ያሉ ስራዎች
+                job_list = JOB_CATEGORIES.get(category, ["Other"])
+                job_choice = st.selectbox("Job Title", options=job_list + ["+ Add New Title"])
+                
+                if job_choice == "+ Add New Title":
+                    job_title = st.text_input("Type your Job Title")
+                else:
+                    job_title = job_choice
+
+                ui['job_title'] = job_title
+                
                 c1, c2 = st.columns(2)
                 fn = c1.text_input("First Name", ui.get("first_name", ""))
                 ln = c2.text_input("Last Name", ui.get("last_name", ""))
@@ -131,15 +147,29 @@ elif page == "Create/Edit CV":
             with tabs[2]: # Experience Fields
                 exp_list = ui.get('experience', [])
                 ex = exp_list[0] if isinstance(exp_list, list) and len(exp_list) > 0 else {}
+                
                 cn = st.text_input("Company Name", ex.get('company_name', ""))
                 ex_jt = st.text_input("Job Title (Exp)", ex.get('job_title', ""))
-                dur = st.text_input("Duration", ex.get('duration', ""))
+                
+                # Duration ን ወደ number_input ቀይረነዋል (በዓመት)
+                # ማሳሰቢያ፡ ተጠቃሚው '2 Years' ከሚል '2' እንዲመርጥ ያደርገዋል
+                dur_val = ex.get('duration', "0")
+                # ቁጥር መሆኑን ለማረጋገጥ (ለጥንቃቄ)
+                try:
+                    initial_dur = int(''.join(filter(str.isdigit, str(dur_val)))) if dur_val else 0
+                except:
+                    initial_dur = 0
+
+                dur = st.number_input("Duration (in years)", min_value=0, max_value=50, value=initial_dur, step=1)
+                
                 curr = st.checkbox("Currently Working Here", value=ex.get('is_currently_working', False))
                 desc = st.text_area("Job Description", ex.get('job_description', ""))
                 ach = st.text_area("Achievements", ui.get('achievements', ex.get('achievements', "")))
-                # State እንዲይዝ
+                
+                # State እንዲይዝ (ውጤቱን ወደ UI ዳታቤዝ ለመላክ)
                 ui['experience_job_title'] = ex_jt
                 ui['company_name'] = cn
+                ui['duration'] = f"{dur} Years" # ፒዲኤፉ ላይ '5 Years' ተብሎ እንዲወጣ
 
             with tabs[3]: # Certificates & References
                 col_a, col_b = st.columns(2)

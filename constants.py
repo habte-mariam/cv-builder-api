@@ -1,0 +1,44 @@
+# constants.py
+
+JOB_CATEGORIES = {
+    "Technology & IT": [
+        "Software Engineer", "Frontend Developer", "Backend Developer", "Full Stack Developer",
+        "Mobile App Developer", "Data Scientist", "Data Analyst", "Database Administrator",
+        "System Administrator", "Network Engineer", "Cybersecurity Analyst", "Cloud Architect",
+        "DevOps Engineer", "UI/UX Designer", "IT Support Specialist", "Quality Assurance Engineer",
+        "Machine Learning Engineer", "Blockchain Developer", "Game Developer", "Embedded Systems Engineer"
+    ],
+    "Healthcare & Medical": [
+        "General Practitioner", "Specialist Physician", "Nurse", "Pharmacist", "Medical Doctor",
+        "Laboratory Technologist", "Radiologist", "Dentist", "Physiotherapist", "Public Health Officer",
+        "Midwife", "Surgeon", "Anesthesiologist", "Nutritionist", "Psychologist", "Health Administrator"
+    ],
+    "Business, Finance & Management": [
+        "Accountant", "Auditor", "Finance Manager", "Banker", "Investment Analyst",
+        "Project Manager", "Human Resources Manager", "Marketing Manager", "Sales Representative",
+        "Business Analyst", "Operations Manager", "Strategic Planner", "Logistics Coordinator",
+        "Supply Chain Manager", "Entrepreneur", "Office Administrator", "Risk Manager"
+    ],
+    "Engineering & Architecture": [
+        "Civil Engineer", "Mechanical Engineer", "Electrical Engineer", "Chemical Engineer",
+        "Architect", "Structural Engineer", "Geotechnical Engineer", "Hydraulic Engineer",
+        "Sanitary Engineer", "Urban Planner", "Interior Designer", "Surveyor"
+    ],
+    "Education & Social Science": [
+        "Lecturer", "High School Teacher", "Primary School Teacher", "Social Worker",
+        "Researcher", "Librarian", "Counselor", "Curriculum Developer", "Sociologist",
+        "Linguist", "Economist", "Political Scientist", "Historian"
+    ],
+    "Legal & Communication": [
+        "Lawyer", "Legal Consultant", "Judge", "Prosecutor", "Journalist", "Public Relations Officer",
+        "Content Creator", "Editor", "Translator", "Interpreter", "Media Producer"
+    ],
+    "Other Industries": ["Other"]
+}
+
+SKILLS_DATABASE = [
+    "Python", "Java", "JavaScript", "C++", "SQL", "React", "Node.js", "Flutter", "Dart",
+    "Project Management", "Data Analysis", "Machine Learning", "Graphic Design", "Leadership",
+    "Customer Service", "Critical Thinking", "Teamwork", "Public Speaking", "Microsoft Office",
+    "Accounting Software", "AutoCAD", "GIS", "Stata", "SPSS", "Digital Marketing", "SEO"
+]
