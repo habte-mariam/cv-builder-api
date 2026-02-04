@@ -263,9 +263,9 @@ elif page == "Create/Edit CV":
             
             full_data = profile_payload
             full_data.update({
-                "education": [{"school": sch, "degree": deg, "field": fld, "grad_year": gy, "cgpa": cgpa}],
+                "education": [{"school": sch, "degree": deg, "field": fld, "grad_year": gy, "cgpa": str(cgpa)}],
                 "experience": [{"company_name": cn, "job_title": ex_jt, "duration": f"{dur} Years", "job_description": desc, "achievements": ach}],
-                "certificates": [{"cert_name": c_nm, "organization": c_org, "year": c_yr}],
+                "certificates": [{"cert_name": c_nm, "organization": c_org, "year": str(c_yr)}],
                 "user_references": [{"name": r_nm, "job": r_jb, "phone": r_ph}],
                 "skills": [{"name": s} for s in st.session_state.temp_skills]
             })
