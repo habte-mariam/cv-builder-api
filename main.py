@@ -102,10 +102,10 @@ elif page == "Create/Edit CV":
             adr = st.text_input("Address", ui.get("address", ""))
             
             try:
-                raw_age = int(ui.get("age", 25))
+                raw_age = str(ui.get("age", 25))
             except:
                 raw_age = 25
-            age = c1.number_input("Age", min_value=18, max_value=60, value=max(18, raw_age))
+            age = c1.number_input("Age", min_value=18, max_value=60, value=max(18, str(raw_age) if raw_age.isdigit() else 25))
             
             gen = c2.selectbox("Gender", ["Male", "Female"], index=0 if ui.get("gender")=="Male" else 1)
             summ = st.text_area("Summary", ui.get("summary", ""), height=120)
