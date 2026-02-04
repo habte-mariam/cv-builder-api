@@ -109,7 +109,7 @@ elif page == "Create/Edit CV":
                 ph = c1.text_input("Phone", ui.get("phone", ""))
                 ph2 = c2.text_input("Secondary Phone", ui.get("phone2", ""))
                 adr = st.text_input("Address", ui.get("address", ""))
-                age = c1.text_input("Age", ui.get("age", ""))
+                age = c1.number_input("Age", min_value=18, max_value=60, value=int(ui.get("age", 25)) if ui.get("age") else 25, step=1)                
                 gen = c2.selectbox("Gender", ["Male", "Female"], index=0 if ui.get("gender")=="Male" else 1)
                 nat = st.text_input("Nationality", ui.get("nationality", ""))
                 li = st.text_input("LinkedIn URL", ui.get("linkedin", ""))
