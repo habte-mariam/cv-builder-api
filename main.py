@@ -109,26 +109,36 @@ elif page == "Create/Edit CV":
             gen = c2.selectbox("Gender", ["Male", "Female"], index=0 if ui.get("gender")=="Male" else 1)
             summ = st.text_area("Summary", ui.get("summary", ""), height=120)
 
-        # 2. Education Tab
+# 2. Education Tab (Safe)
         with tabs[1]:
             st.subheader("Academic Background")
-            edu_list = ui.get('education', [{}])
-            ed = edu_list[0] if edu_list else {}
-            sch = st.selectbox("University", options=UNIVERSITIES)
-            deg = st.selectbox("Degree", options=DEGREE_TYPES)
-            fld = st.selectbox("Field", options=FIELDS_OF_STUDY)
-            gy = st.number_input("Year", 1990, 2030, 2024)
-            cgpa = st.text_input("CGPA", str(ed.get('cgpa', '0.0')))
+            edu_list = ui.get('education', [])
+            ed = edu_list[0] if isinstance(edu_list, list) and len(edu_list) > 0 else {}
+            
+            # Use .get() on the 'ed' object
+            sch = st.selectbox("University", options=UNIVERSITIES, index=UNIVERSITIES.index(ed.get('school')) if ed.get('school') in UNIVERSITIES else 0)
+            deg = st.selectbox("Degree", options=DEGREE_TYPES, index=DEGREE_TYPES.index(ed.get('degree')) if ed.get('degree') in DEGREE_TYPES else 0)
+            fld = st.selectbox("Field", options=FIELDS_OF_STUDY, index=FIELDS_OF_STUDY.index(ed.get('field')) if ed.get('field') in FIELDS_OF_STUDY else 0)
+            gy = st.number_input("Year", 1990, 2030, int(ed.get('grad_year', 2024)))
+            cgpa = st.text_input("CGPA", str(ed.get('cgpa', '3.0')))
             proj = st.text_area("Final Project", ed.get('project', ""))
 
-        # 3. Experience Tab
+        # 3. Experience Tab (Safe)
         with tabs[2]:
             st.subheader("Work History")
-            exp_list = ui.get('experience', [{}])
-            ex = exp_list[0] if exp_list else {}
+            exp_list = ui.get('experience', [])
+            ex = exp_list[0] if isinstance(exp_list, list) and len(exp_list) > 0 else {}
+            
             cn = st.text_input("Company Name", ex.get('company_name', ""))
             ex_jt = st.text_input("Position", ex.get('job_title', ""))
-            dur = st.number_input("Years of Experience", 0, 40, 1)
+            
+            # Safe duration conversion
+            try:
+                raw_dur = int(''.join(filter(str.isdigit, str(ex.get('duration', '0')))))
+            except:
+                raw_dur = 0
+                
+            dur = st.number_input("Years of Experience", 0, 40, raw_dur)
             desc = st.text_area("Description", ex.get('job_description', ""))
             ach = st.text_area("Key Achievements", ex.get('achievements', ""))
 
