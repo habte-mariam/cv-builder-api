@@ -151,9 +151,15 @@ class CVGenerator(FPDF):
             if not ed.get('school'): continue
             self.set_font(self.font_name, "B", 11)
             self.cell(150, 6, f"{ed.get('degree')} in {ed.get('field')}")
-            self.cell(0, 6, ed.get('grad_year', ''), align='R', ln=True)
+            
+            # ዓመቱን ወደ string መቀየር
+            grad_year = str(ed.get('grad_year', ''))
+            self.cell(0, 6, grad_year, align='R', ln=True)
+            
             self.set_font(self.font_name, "", 10)
-            self.cell(0, 5, f"{ed.get('school')} | CGPA: {ed.get('cgpa', 'N/A')}", ln=True)
+            # CGPA ቁጥር ሊሆን ስለሚችል እሱንም str() ውስጥ ክተተው
+            cgpa_val = str(ed.get('cgpa', 'N/A'))
+            self.cell(0, 5, f"{ed.get('school')} | CGPA: {cgpa_val}", ln=True)
             self.ln(2)
 
     def _add_skills(self, skill_list):
@@ -169,7 +175,10 @@ class CVGenerator(FPDF):
             if not c.get('cert_name'): continue
             self.set_font(self.font_name, "B", 10)
             self.cell(150, 5, c.get('cert_name'))
-            self.cell(0, 5, str(c.get('year', '')), align='R', ln=True)
+            
+            # ስህተቱ እዚህ ጋር ነው - ዓመተ ምህረቱን (year) ወደ string መቀየር አለብህ
+            year_val = str(c.get('year', '')) 
+            self.cell(0, 5, year_val, align='R', ln=True)
             self.ln(1)
 
     def _add_references(self, ref_list):
