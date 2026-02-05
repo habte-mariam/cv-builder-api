@@ -184,44 +184,48 @@ elif st.session_state.page == "Create/Edit CV":
             summ = st.text_area("Summary", ui.get("summary", ""), height=120)
 
         # 2. Education Tab
-        with tabs[1]:
-            st.subheader("Academic Background")
-            edu_list = ui.get('education', [])
-            ed = edu_list[0] if isinstance(edu_list, list) and len(edu_list) > 0 else {}
-            school_levels = ["Grade 1-8", "Grade 9-10", "Grade 11-12"]
-            
-            # 1. Level Selection
-            current_deg = ed.get('degree', "Bachelor's Degree")
-            deg = st.selectbox("Level of Education", options=DEGREE_TYPES, 
-                               index=DEGREE_TYPES.index(current_deg) if current_deg in DEGREE_TYPES else 0)
+    with tabs[1]:
+        st.subheader("Academic Background")
+        edu_list = ui.get('education', [])
+        ed = edu_list[0] if isinstance(edu_list, list) and len(edu_list) > 0 else {}
+        
+        school_levels = ["Grade 1-8", "Grade 9-10", "Grade 11-12"]
+        
+        # 1. Level Selection
+        current_deg = ed.get('degree', "Bachelor's Degree")
+        deg = st.selectbox("Level of Education", options=DEGREE_TYPES, 
+                        index=DEGREE_TYPES.index(current_deg) if current_deg in DEGREE_TYPES else 0)
 
-            # 2. Conditional School Name Input
-            if deg in school_levels:
-                # ለ 1-12 ተማሪዎች የዩኒቨርሲቲ ምርጫ አያስፈልግም፣ ስም ብቻ ማስገባት
-                sch = st.text_input("School Name", ed.get('school', ""))
-                fld, cgpa, proj = "General Education", "N/A", ""
-            else:
-                # ለከፍተኛ ትምህርት የዩኒቨርሲቲ ዝርዝር ማሳየት
-                sch_choice = st.selectbox("University", options=UNIVERSITIES)
-                sch = st.text_input("Manual School Name", ed.get('school', "")) if sch_choice == "Other" else sch_choice
-                
-                # ለከፍተኛ ትምህርት ብቻ የሚታዩ (Field, CGPA, Project)
-                fld_choice = st.selectbox("Field of Study", options=FIELDS_OF_STUDY)
-                fld = st.text_input("Specify Field", ed.get('field', "")) if fld_choice == "Other" else fld_choice
-                cgpa = st.text_input("CGPA", str(ed.get('cgpa', '0.0')))
-                proj = st.text_area("Final Project/Thesis", ed.get('project', ""))
-
-            # 3. Year of Completion (ሁልጊዜ ይታያል)
+        # ሎጂኩን እዚህ ጋር እንለያለን
+        if deg in school_levels:
+            # --- ለ Grade 1-12 ብቻ የሚታይ ---
+            sch = st.text_input("School Name", ed.get('school', ""))
             gy = st.number_input("Year of Completion", 1990, 2030, int(ed.get('grad_year', 2024)))
+            
+            # ሌሎቹ እንዲደበቁ እሴቶቹን በዲፎልት እንሞላለን
+            fld, cgpa, proj = "General Education", "N/A", ""
+            
+        else:
+            # --- ለከፍተኛ ትምህርት (University/College) የሚታይ ---
+            sch_choice = st.selectbox("University", options=UNIVERSITIES)
+            sch = st.text_input("Manual School Name", ed.get('school', "")) if sch_choice == "Other" else sch_choice
+            
+            fld_choice = st.selectbox("Field of Study", options=FIELDS_OF_STUDY)
+            fld = st.text_input("Specify Field", ed.get('field', "")) if fld_choice == "Other" else fld_choice
+            
+            cgpa = st.text_input("CGPA", str(ed.get('cgpa', '0.0')))
+            proj = st.text_area("Final Project/Thesis", ed.get('project', ""))
+            
+            # የጨረሰበት አመት ለሁሉም ያስፈልጋል
+            gy = st.number_input("Year of Graduation", 1990, 2030, int(ed.get('grad_year', 2024)))
 
-            # Save values to UI state for DB submission
-            ui['education_school'] = sch
-            ui['education_degree'] = deg
-            ui['education_field'] = fld
-            ui['education_cgpa'] = cgpa
-            ui['education_project'] = proj
-            ui['education_year'] = gy
-
+        # Save values to UI state for DB submission
+        ui['education_school'] = sch
+        ui['education_degree'] = deg
+        ui['education_field'] = fld
+        ui['education_cgpa'] = cgpa
+        ui['education_project'] = proj
+        ui['education_year'] = gy
         # 3. Experience Tab
         with tabs[2]:
             st.subheader("Work History")
@@ -255,51 +259,55 @@ elif st.session_state.page == "Create/Edit CV":
                 r_ph = st.text_input("Ref Phone", rf.get('phone', ""))
 
 # 5. Skills Tab
-        with tabs[4]:
-            st.subheader("🛠 Professional Skills")
-            
-            # 1. ዳታቤዝ ውስጥ ያሉትን ወይም ቀድሞ የተመረጡትን ማግኘት
-            if 'temp_skills' not in st.session_state:
-                st.session_state.temp_skills = [s['name'] for s in ui.get('skills', [])] if isinstance(ui.get('skills'), list) else []
+with tabs[4]:
+    st.subheader("🛠 Professional Skills")
+    
+    # 1. Initialize session state if not exists
+    if 'temp_skills' not in st.session_state:
+        # ከዳታቤዝ የመጣውን ዳታ ወደ ዝርዝር (List) ቀይሮ መያዝ
+        existing_skills = [s['name'] for s in ui.get('skills', [])] if isinstance(ui.get('skills'), list) else []
+        st.session_state.temp_skills = set(existing_skills) # 'set' ለፈጣን ፍለጋ ይጠቅማል
 
-            # 2. የክህሎት ዘርፉን ማስመረጥ
-            skill_categories = list(SKILLS_DATABASE.keys())
-            selected_cat = st.selectbox("Choose Skill Category", options=["All"] + skill_categories)
+    # 2. የክህሎት ዘርፉን ማስመረጥ
+    skill_categories = list(SKILLS_DATABASE.keys())
+    selected_cat = st.selectbox("📂 Choose Skill Category", options=skill_categories)
 
-            # 3. እንደ ተመረጠው ዘርፍ ዝርዝሩን ማጣራት
-            if selected_cat == "All":
-                category_options = [skill for sublist in SKILLS_DATABASE.values() for skill in sublist]
+    # 3. በካቴጎሪው ውስጥ ያሉትን ስኪሎች በ Checkbox ማሳያ
+    st.write(f"**Select skills for {selected_cat}:**")
+    category_options = SKILLS_DATABASE.get(selected_cat, [])
+    
+    # ስኪሎቹን በ 3 ኮለም እናሳይ (ቦታ ለመቆጠብ)
+    cols = st.columns(3)
+    for i, skill in enumerate(category_options):
+        # እያንዳንዱ ስኪል ቀድሞ ተመርጦ እንደሆነ ቼክ ማድረግ
+        is_checked = skill in st.session_state.temp_skills
+        
+        # በኮለም ውስጥ Checkbox መፍጠር
+        with cols[i % 3]:
+            if st.checkbox(skill, value=is_checked, key=f"chk_{skill}"):
+                st.session_state.temp_skills.add(skill)
             else:
-                category_options = SKILLS_DATABASE.get(selected_cat, [])
+                # Uncheck ከተደረገ ከዝርዝሩ ውስጥ ማስወጣት
+                if skill in st.session_state.temp_skills:
+                    st.session_state.temp_skills.remove(skill)
 
-            # 4. ቀድሞ የተመረጡት በዝርዝሩ ውስጥ እንዲታዩ ማዋሃድ (ይህ ወሳኝ ነው!)
-            # ተጠቃሚው ዘርፍ ሲቀይር የድሮ ምርጫዎቹ 'options' ውስጥ ከሌሉ ይጠፋሉ፣ ስለዚህ እዚህ ጋር እንደምርባቸዋለን
-            all_options = sorted(list(set(category_options + st.session_state.temp_skills)))
+    st.divider()
 
-            # 5. Multiselect
-            # በየዘርፉ ውስጥ ሆነህ የመረጥከው እዚህ temp_skills ውስጥ ይቀመጣል
-            current_selections = st.multiselect(
-                f"Select or Type Skills ({selected_cat})", 
-                options=all_options, 
-                default=[s for s in st.session_state.temp_skills if s in all_options]
-            )
+    # 4. የተመረጡትን በአንድ ላይ ማሳያ (Summary)
+    st.write("📋 **Selected Skills:**")
+    if st.session_state.temp_skills:
+        # ለውበቱ በ Tag መልክ ማሳየት
+        skills_display = "  •  ".join(sorted(list(st.session_state.temp_skills)))
+        st.info(skills_display)
+    else:
+        st.caption("No skills selected yet.")
 
-            # 6. ሴሽን ስቴቱን ማዘመን
-            # አዲስ የተመረጡትን መያዝ እና የተሰረዙትን ማስወገድ
-            updated_skills = list(set(st.session_state.temp_skills + current_selections))
-            # በወቅታዊው ዝርዝር ውስጥ እያሉ ያልተመረጡትን (Unchecked) ማስወገድ
-            for opt in all_options:
-                if opt in updated_skills and opt not in current_selections:
-                    updated_skills.remove(opt)
-            
-            st.session_state.temp_skills = updated_skills
-            skills_in = ", ".join(st.session_state.temp_skills)
-            
-            # የተመረጡትን ክህሎቶች በትንሽ 'Tags' መልክ ማሳያ (ቦታ ለመቆጠብ)
-            if st.session_state.temp_skills:
-                st.write("---")
-                st.caption("Selected Skills Summary:")
-                st.write(f" `{skills_in}` ")
+    # 5. Save Button (ወደ ዋናው UI state ለመቀየር)
+    if st.button("💾 Confirm & Save Skills", type="primary"):
+        # ወደ ዳታቤዝ የሚላከውን ፎርማት ማዘጋጀት (List of dicts)
+        final_skills = [{"name": s} for s in st.session_state.temp_skills]
+        ui['skills'] = final_skills
+        st.success(f"Successfully saved {len(final_skills)} skills!")
 
         # 6. Generate Tab
         with tabs[5]:
