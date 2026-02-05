@@ -178,33 +178,51 @@ elif st.session_state.page == "Create/Edit CV":
             gen = c2.selectbox("Gender", ["Male", "Female"], index=0 if ui.get("gender")=="Male" else 1)
             summ = st.text_area("Summary", ui.get("summary", ""), height=120)
 
-        # --- Education Tab (የተስተካከለ) ---
+# --- Education Tab ---
         with tabs[1]:
             st.subheader("Academic Background")
             edu_list = ui.get('education', [])
-            ed = edu_list[0] if isinstance(edu_list, list) and len(edu_list) > 0 else {}
+            ed = edu_list[0] if isinstance(edu_list, list) and len(edu_list) > 0 and isinstance(edu_list[0], dict) else {}
+            
+            # 1. ይህንን selectbox ከፎርም ውጭ ብታደርገው ይሻላል፣ ግን በፎርም ውስጥ እንዲሆን ካስገደድክ
+            # ተጠቃሚው መጀመሪያ ደረጃውን መርጦ 'Enter' እንዲጫን ወይም ሌላ ዘዴ መጠቀም አለብን።
+            # አሁኑኑ እንዲሰራ ግን እንዲህ እናድርገው፦
             
             school_levels = ["Grade 1-8", "Grade 9-10", "Grade 11-12"]
             
-            # ምርጫውን በየጊዜው እንዲያነብ 'key' እንሰጠዋለን
-            deg = st.selectbox("Level of Education", options=DEGREE_TYPES, 
-                               index=DEGREE_TYPES.index(st.session_state.edu_level) if st.session_state.edu_level in DEGREE_TYPES else 0)
+            # ምርጫውን በራሱ እንዲያድስ key እንሰጠዋለን
+            deg = st.selectbox(
+                "Level of Education", 
+                options=DEGREE_TYPES, 
+                index=DEGREE_TYPES.index(st.session_state.edu_level) if st.session_state.edu_level in DEGREE_TYPES else 0,
+                key="edu_level_selector" # ቁልፍ መጨመር ለውጡን እንዲያውቅ ይረዳዋል
+            )
             
-            # ሎጂኩ እዚህ ጋር ነው (አስፈላጊ የሆኑትን ብቻ ያሳያል)
+            # ምርጫው ከተቀየረ session_stateን አዘምን
+            if deg != st.session_state.edu_level:
+                st.session_state.edu_level = deg
+                st.rerun() # ገጹን አድሶ ፎርሙን እንዲያስተካክል ያስገድደዋል
+
+            st.divider()
+
+            # --- እዚህ ጋር ነው መደበቂያው ሎጂክ ---
             if deg in school_levels:
+                # ለ Grade 1-12 ብቻ የሚታይ
                 sch = st.text_input("School Name", ed.get('school', ""))
                 gy = st.number_input("Year of Completion", 1990, 2030, int(ed.get('grad_year', 2024)))
-                # እነዚህ ለዳታቤዝ ባዶ ይላካሉ
+                # የተደበቁት እሴቶች በባዶ እንዲላኩ
                 fld, cgpa, proj = "General Education", "N/A", "N/A"
             else:
+                # ለ University/College የሚታይ (በፎቶው ላይ ያሉት እዚህ ውስጥ ገብተዋል)
                 sch_choice = st.selectbox("University", options=UNIVERSITIES)
                 sch = st.text_input("Manual School Name", ed.get('school', "")) if sch_choice == "Other" else sch_choice
+                
                 fld_choice = st.selectbox("Field of Study", options=FIELDS_OF_STUDY)
                 fld = st.text_input("Specify Field", ed.get('field', "")) if fld_choice == "Other" else fld_choice
+                
                 cgpa = st.text_input("CGPA", str(ed.get('cgpa', '0.0')))
                 proj = st.text_area("Final Project/Thesis", ed.get('project', ""))
                 gy = st.number_input("Year of Graduation", 1990, 2030, int(ed.get('grad_year', 2024)))
-
         # --- Experience Tab ---
         with tabs[2]:
             st.subheader("Work History")
