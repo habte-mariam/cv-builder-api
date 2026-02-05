@@ -121,10 +121,13 @@ elif st.session_state.page == "Create/Edit CV":
     # መጀመሪያ ከዳታቤዝ የመጣ ፎቶ ካለ እሱን ይይዛል፣ ካልሆነ None ይሆናል
     profile_pic_base64 = ui.get("profile_pic", None)
     
-    # Education logic
+    # Education logic - የተስተካከለ (Unique Key እንዲሁም የመጀመሪያ የትምህርት ደረጃ እንዲያነብ)
     if 'edu_level' not in st.session_state:
         edu_list = ui.get('education', [])
-        initial_deg = edu_list[0].get('degree', "Bachelor's Degree") if edu_list else "Bachelor's Degree"
+        if isinstance(edu_list, list) and len(edu_list) > 0 and isinstance(edu_list[0], dict):
+            initial_deg = edu_list[0].get('degree', "Bachelor's Degree")
+        else:
+            initial_deg = "Bachelor's Degree" 
         st.session_state.edu_level = initial_deg
 
     # Skills logic
