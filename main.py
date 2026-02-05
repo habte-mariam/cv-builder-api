@@ -207,21 +207,43 @@ elif st.session_state.page == "Create/Edit CV":
                 r_jb = st.text_input("Ref Job & Company", rf.get('job', ""))
                 r_ph = st.text_input("Ref Phone", rf.get('phone', ""))
 
-        with tabs[4]:
-            st.subheader("🛠 Professional Skills")
-            selected_cat = st.selectbox(
-                "📂 Choose Category", options=list(SKILLS_DATABASE.keys()))
-            category_options = SKILLS_DATABASE.get(selected_cat, [])
-            cols = st.columns(3)
-            for i, skill in enumerate(category_options):
-                is_checked = skill in st.session_state.temp_skills
-                with cols[i % 3]:
-                    if st.checkbox(skill, value=is_checked, key=f"skill_box_{selected_cat}_{skill}"):
-                        st.session_state.temp_skills.add(skill)
-                    elif skill in st.session_state.temp_skills:
-                        st.session_state.temp_skills.remove(skill)
-            st.info(
-                f"Selected: {', '.join(sorted(st.session_state.temp_skills))}")
+with tabs[4]:
+    st.subheader("🛠 Professional Skills")
+
+    # ካታጎሪ መምረጫ
+    selected_cat = st.selectbox(
+        "📂 Choose Category to see skills",
+        options=list(SKILLS_DATABASE.keys()),
+        key="skill_category_selector"
+    )
+
+    # በካታጎሪው ስር ያሉ ክህሎቶች
+    category_options = SKILLS_DATABASE.get(selected_cat, [])
+
+    # ባለህበት ካታጎሪ ውስጥ ያሉትን ክህሎቶች በ multiselect ማሳየት (ይህ ይበልጥ አስተማማኝ ነው)
+    selected_in_cat = st.multiselect(
+        f"Select skills from {selected_cat}:",
+        options=category_options,
+        default=[s for s in category_options if s in st.session_state.temp_skills],
+        key=f"ms_{selected_cat}"  # ካታጎሪው ሲቀየር key-ውም ስለሚቀየር ዝርዝሩ Refresh ይሆናል
+    )
+
+    # በየጊዜው የተመረጡትን ወደ temp_skills መጨመር
+    for s in selected_in_cat:
+        st.session_state.temp_skills.add(s)
+
+    # የተመረጡትን ሁሉ ማሳያ
+    st.write("---")
+    st.write("**All Selected Skills:**")
+    if st.session_state.temp_skills:
+        cols = st.columns(4)
+        for i, s in enumerate(sorted(list(st.session_state.temp_skills))):
+            with cols[i % 4]:
+                if st.button(f"❌ {s}", key=f"remove_{s}"):
+                    st.session_state.temp_skills.remove(s)
+                    st.rerun()
+    else:
+        st.info("No skills selected yet.")
 
         with tabs[5]:
             submit = st.form_submit_button(
