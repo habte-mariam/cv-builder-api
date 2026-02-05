@@ -128,7 +128,7 @@ elif st.session_state.page == "Create/Edit CV":
     if not ui:
         st.info("💡 Please start by loading a CV from the Dashboard or enter your details below.")
     
-    # ፎቶ ከፎርም ውጭ
+    # 1. Profile Photo (ከፎርም ውጭ መሆን አለበት)
     st.subheader("Profile Photo")
     uploaded_file = st.file_uploader("Upload Profile Photo", type=["jpg", "jpeg", "png"])
     profile_pic_base64 = ui.get("profile_pic", None)
@@ -137,11 +137,12 @@ elif st.session_state.page == "Create/Edit CV":
         profile_pic_base64 = base64.b64encode(bytes_data).decode("utf-8")
         st.image(bytes_data, width=100)
 
-    # --- Start Universal Form ---
+    # 2. ዋናው ፎርም እዚህ ይጀምራል
     with st.form("cv_universal_form"):
+        # ታቦቹ በፎርሙ ውስጥ መፈጠር አለባቸው
         tabs = st.tabs(["👤 Profile", "🎓 Education", "💼 Experience", "🎖 Qualifications", "🛠 Skills", "🚀 Generate"])
         
-        # 1. Profile Tab
+        # --- Profile Tab ---
         with tabs[0]:
             st.subheader("Personal Information")
             c1, c2 = st.columns(2)
@@ -158,7 +159,6 @@ elif st.session_state.page == "Create/Edit CV":
             
             from datetime import date
             today = date.today()
-            # Age Calculation
             birth_date = st.date_input("Select Birth Date", value=date(today.year - 25, today.month, today.day))
             age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
             st.info(f"Age: **{age}**")
@@ -166,7 +166,7 @@ elif st.session_state.page == "Create/Edit CV":
             gen = c2.selectbox("Gender", ["Male", "Female"], index=0 if ui.get("gender")=="Male" else 1)
             summ = st.text_area("Summary", ui.get("summary", ""), height=120)
 
-        # 2. Education Tab
+        # --- Education Tab ---
         with tabs[1]:
             st.subheader("Academic Background")
             edu_list = ui.get('education', [])
@@ -189,7 +189,7 @@ elif st.session_state.page == "Create/Edit CV":
                 proj = st.text_area("Final Project/Thesis", ed.get('project', ""))
                 gy = st.number_input("Year of Graduation", 1990, 2030, int(ed.get('grad_year', 2024)))
 
-        # 3. Experience Tab
+        # --- Experience Tab ---
         with tabs[2]:
             st.subheader("Work History")
             exp_list = ui.get('experience', [])
@@ -200,7 +200,7 @@ elif st.session_state.page == "Create/Edit CV":
             desc = st.text_area("Description", ex.get('job_description', ""))
             ach = st.text_area("Key Achievements", ex.get('achievements', ""))
 
-        # 4. Qualifications Tab
+        # --- Qualifications Tab ---
         with tabs[3]:
             col_a, col_b = st.columns(2)
             with col_a:
@@ -216,7 +216,7 @@ elif st.session_state.page == "Create/Edit CV":
                 r_jb = st.text_input("Ref Job & Company", rf.get('job', ""))
                 r_ph = st.text_input("Ref Phone", rf.get('phone', ""))
 
-        # 5. Skills Tab
+        # --- Skills Tab (አሁን በትክክለኛው ቦታ ላይ ነው) ---
         with tabs[4]:
             st.subheader("🛠 Professional Skills")
             if 'temp_skills' not in st.session_state:
@@ -224,7 +224,7 @@ elif st.session_state.page == "Create/Edit CV":
                 st.session_state.temp_skills = set(existing_skills)
 
             skill_categories = list(SKILLS_DATABASE.keys())
-            selected_cat = st.selectbox("📂 Choose Skill Category", options=skill_categories)
+            selected_cat = st.selectbox("📂 Choose Category", options=skill_categories, key="skill_cat_select")
             
             category_options = SKILLS_DATABASE.get(selected_cat, [])
             cols = st.columns(3)
@@ -237,13 +237,17 @@ elif st.session_state.page == "Create/Edit CV":
                         if skill in st.session_state.temp_skills:
                             st.session_state.temp_skills.remove(skill)
             
-            st.info(f"Selected: {', '.join(st.session_state.temp_skills)}")
+            st.info(f"Selected: {', '.join(sorted(st.session_state.temp_skills))}")
 
-        # 6. Generate Tab
+        # --- Generate Tab ---
         with tabs[5]:
             st.info("Ensure all data is correct before proceeding.")
             submit = st.form_submit_button("🚀 Save Data & Generate Full Preview", use_container_width=True)
 
+    # 3. ፎርሙ ሲላክ የሚሰራ ሎጂክ (ከፎርሙ ብሎክ ውጭ)
+    if submit:
+        # ... (የቅድሙ የዳታ ሴቭ ሎጂክ እዚህ ይቀጥላል)
+        st.success("✅ CV Saved!")
     # --- Logic after form submission (OUTSIDE TABS) ---
     if submit:
         try:
