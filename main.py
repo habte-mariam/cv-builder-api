@@ -167,10 +167,11 @@ elif st.session_state.page == "Create/Edit CV":
             ln = c2.text_input("Last Name", ui.get("last_name", ""))
             em = st.text_input("Email", ui.get("email", ""))
 
-            category = st.selectbox(
-                "Department", options=list(JOB_CATEGORIES.keys()))
-            jt = st.selectbox(
-                "Job Title", options=JOB_CATEGORIES[category] + ["Other"])
+            jt = st.text_input(
+                "Job Title",
+                value=ui.get("job_title", ""),
+                placeholder="Software Engineer"
+            )
 
             ph = c1.text_input("Phone", ui.get("phone", ""))
             ph2 = c2.text_input("Secondary Phone", ui.get("phone2", ""))
