@@ -4,12 +4,12 @@ from pdf_generator import CVGenerator
 import base64
 from streamlit_option_menu import option_menu
 import google.generativeai as genai
+from datetime import date
 from constants import (
     JOB_CATEGORIES, SKILLS_DATABASE, UNIVERSITIES,
     DEGREE_TYPES, FIELDS_OF_STUDY, DEREJA_CERTIFICATES,
     CERTIFICATE_NAMES, ISSUING_ORGANIZATIONS
 )
-from datetime import date
 
 # --- Supabase & Gemini API Key Setup ---
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
@@ -63,8 +63,8 @@ with st.sidebar:
         font_choice = st.selectbox(
             "Font Family", ["Arial", "Courier", "Helvetica", "Times"])
     with st.expander("🏗️ CV Structure"):
-        section_order = st.multiselect("Display Sections", ["Summary", "Experience", "Education", "Skills", "Certificates", "References"], default=[
-                                       "Summary", "Experience", "Education", "Skills", "Certificates", "References"])
+        section_order = st.multiselect("Display Sections", ["Summary", "Experience", "Education", "Skills", "Certificates", "References"],
+                                       default=["Summary", "Experience", "Education", "Skills", "Certificates", "References"])
 
 # --- 3. Content Logic ---
 if st.session_state.page == "Dashboard":
@@ -94,12 +94,9 @@ if st.session_state.page == "Dashboard":
                             with c2:
                                 if st.button("📝 Edit CV", key=f"edit_{user['id']}", use_container_width=True):
                                     st.session_state.ui = user
-                                    st.session_state.page = "Create/Edit CV"
-                                    # Skill-ቹን መጫን
-                                    existing_skills = [s['name']
-                                                       for s in user.get('skills', [])]
                                     st.session_state.temp_skills = set(
-                                        existing_skills)
+                                        [s['name'] for s in user.get('skills', [])])
+                                    st.session_state.page = "Create/Edit CV"
                                     st.rerun()
                 else:
                     st.warning("⚠️ No records found.")
@@ -107,13 +104,22 @@ if st.session_state.page == "Dashboard":
 elif st.session_state.page == "Create/Edit CV":
     ui = st.session_state.get("ui", {})
     st.title("📝 CV Builder")
-    profile_pic_base64 = ui.get("profile_pic", None)
 
-    # Tabs መፍጠር
+    profile_pic_base64 = ui.get("profile_pic", None)
+    uploaded_file = st.file_uploader(
+        "Upload Profile Photo", type=["jpg", "jpeg", "png"])
+    if uploaded_file:
+        profile_pic_base64 = base64.b64encode(
+            uploaded_file.getvalue()).decode("utf-8")
+        st.image(uploaded_file, width=100)
+    elif profile_pic_base64:
+        st.image(base64.b64decode(profile_pic_base64), width=100)
+
+    # ታቦቹን እንፈጥራለን
     tabs = st.tabs(["👤 Profile", "🎓 Education", "💼 Experience",
                    "🎖 Qualifications", "🛠 Skills", "🚀 Generate"])
 
-    # ፎርሙን እዚህ ጋር እንጀምራለን
+    # ፎርሙን እዚህ ጋር እንጀምራለን - Skills ታብን ግን ውጭ እናደርገዋለን
     with st.form("cv_universal_form"):
         with tabs[0]:
             st.subheader("Personal Information")
@@ -145,7 +151,6 @@ elif st.session_state.page == "Create/Edit CV":
             ed = edu_list[0] if isinstance(
                 edu_list, list) and len(edu_list) > 0 else {}
             deg = st.selectbox("Level of Education", options=DEGREE_TYPES)
-
             st.divider()
             if deg in ["Grade 1-8", "Grade 9-10", "Grade 11-12"]:
                 sch = st.text_input("School Name", ed.get('school', ""))
@@ -194,29 +199,32 @@ elif st.session_state.page == "Create/Edit CV":
 
         with tabs[5]:
             st.subheader("Finalize CV")
-            st.info("ክህሎቶችን (Skills) በመረጡት መሰረት ሴቭ ይደረጋሉ።")
-            # Submit በተኑ እዚህ ጋር መሆን አለበት!
+            st.success("ሁሉም መረጃዎች ከተሞሉ በኋላ 'Generate' የሚለውን ይጫኑ።")
+            # Submit በተኑ እዚህ ጋር የግድ መሆን አለበት
             submit = st.form_submit_button(
                 "🚀 Save Data & Generate CV", use_container_width=True)
 
-    # Skills Tab ከፎርም ውጭ (Button Error ለመከላከል)
+    # 4. Skills Tab (ከፎርም ውጭ - ምክንያቱም Button Error ስለሚፈጥር)
     with tabs[4]:
         st.subheader("🛠 Professional Skills")
         selected_cat = st.selectbox(
-            "📂 የምድብ ምርጫ", options=list(SKILLS_DATABASE.keys()))
+            "📂 Category", options=list(SKILLS_DATABASE.keys()))
         category_options = SKILLS_DATABASE.get(selected_cat, [])
         cols = st.columns(4)
         for i, skill in enumerate(category_options):
             with cols[i % 4]:
                 is_selected = skill in st.session_state.temp_skills
-                if st.button(f"{'✅' if is_selected else ''} {skill}", key=f"s_{skill}", use_container_width=True):
+                if st.button(f"{'✅' if is_selected else '➕'} {skill}", key=f"s_{skill}", use_container_width=True):
                     if is_selected:
                         st.session_state.temp_skills.remove(skill)
                     else:
                         st.session_state.temp_skills.add(skill)
                     st.rerun()
+        if st.button("🗑 Clear All Skills"):
+            st.session_state.temp_skills = set()
+            st.rerun()
 
-    # --- Submit Logic ---
+    # --- 5. Save & Generate Logic ---
     if submit:
         try:
             profile_payload = {"profile_pic": profile_pic_base64, "email": em, "first_name": fn, "last_name": ln,
@@ -249,5 +257,6 @@ elif st.session_state.page == "Create/Edit CV":
             st.error(f"Error: {e}")
 
     if st.session_state.current_pdf:
+        st.divider()
         st.download_button(label="📥 Download CV", data=bytes(st.session_state.current_pdf),
                            file_name=f"{fn}_CV.pdf", mime="application/pdf", use_container_width=True)
