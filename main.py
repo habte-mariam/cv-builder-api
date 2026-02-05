@@ -119,7 +119,7 @@ elif st.session_state.page == "Create/Edit CV":
     tabs = st.tabs(["👤 Profile", "🎓 Education", "💼 Experience",
                    "🎖 Qualifications", "🛠 Skills", "🚀 Generate"])
 
-    # ፎርሙን እዚህ ጋር እንጀምራለን - Skills ታብን ግን ውጭ እናደርገዋለን
+    # --- ፎርሙን እዚህ ጋር እንጀምራለን ---
     with st.form("cv_universal_form"):
         with tabs[0]:
             st.subheader("Personal Information")
@@ -200,11 +200,11 @@ elif st.session_state.page == "Create/Edit CV":
         with tabs[5]:
             st.subheader("Finalize CV")
             st.success("ሁሉም መረጃዎች ከተሞሉ በኋላ 'Generate' የሚለውን ይጫኑ።")
-            # Submit በተኑ እዚህ ጋር የግድ መሆን አለበት
+            # Submit በተኑ እዚህ መሆኑን አረጋግጫለሁ
             submit = st.form_submit_button(
                 "🚀 Save Data & Generate CV", use_container_width=True)
 
-    # 4. Skills Tab (ከፎርም ውጭ - ምክንያቱም Button Error ስለሚፈጥር)
+    # --- 4. Skills Tab (ከፎርም ውጭ - ምክንያቱም Button Error ስለሚፈጥር) ---
     with tabs[4]:
         st.subheader("🛠 Professional Skills")
         selected_cat = st.selectbox(
@@ -255,7 +255,7 @@ elif st.session_state.page == "Create/Edit CV":
             st.rerun()
         except Exception as e:
             st.error(f"Error: {e}")
-
+    # --- 6. Download Button ---
     if st.session_state.current_pdf:
         st.divider()
         st.download_button(label="📥 Download CV", data=bytes(st.session_state.current_pdf),
