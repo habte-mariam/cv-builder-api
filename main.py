@@ -35,10 +35,8 @@ st.set_page_config(page_title="CV Maker Pro", layout="wide")
 # --- 1. Session State Initialization ---
 if "page" not in st.session_state:
     st.session_state.page = "Dashboard"
-
 if "ui" not in st.session_state:
     st.session_state.ui = {}
-
 if "current_pdf" not in st.session_state:
     st.session_state.current_pdf = None
 
@@ -46,7 +44,6 @@ if "current_pdf" not in st.session_state:
 with st.sidebar:
     st.title("🚀 CV Maker Pro")
     st.divider()
-
     page_selection = option_menu(
         menu_title="Menu",
         options=["Dashboard", "Create/Edit CV"],
@@ -54,33 +51,21 @@ with st.sidebar:
         menu_icon="cast",
         default_index=0 if st.session_state.page == "Dashboard" else 1,
     )
-
     st.session_state.page = page_selection
     st.divider()
-
     with st.expander("🎨 Appearance & Theme", expanded=True):
-        design = st.selectbox(
-            "Choose Template",
-            ["creative", "modern", "minimal", "executive", "classic",
-                "corporate", "bold", "elegant", "professional", "compact"]
-        )
+        design = st.selectbox("Choose Template", [
+                              "creative", "modern", "minimal", "executive", "classic", "corporate", "bold", "elegant", "professional", "compact"])
         theme_hex = st.color_picker("Brand Color", "#2C3E50")
         font_choice = st.selectbox(
             "Font Family", ["Arial", "Courier", "Helvetica", "Times"])
-
     with st.expander("🏗️ CV Structure"):
-        section_order = st.multiselect(
-            "Display Sections",
-            ["Summary", "Experience", "Education",
-                "Skills", "Certificates", "References"],
-            default=["Summary", "Experience", "Education",
-                     "Skills", "Certificates", "References"]
-        )
+        section_order = st.multiselect("Display Sections", ["Summary", "Experience", "Education", "Skills", "Certificates", "References"], default=[
+                                       "Summary", "Experience", "Education", "Skills", "Certificates", "References"])
 
 # --- 3. Content Logic ---
 if st.session_state.page == "Dashboard":
     st.title("📊 User Dashboard")
-
     with st.container(border=True):
         st.subheader("🔍 Find Your CV")
         col1, col2 = st.columns([4, 1])
@@ -114,26 +99,18 @@ if st.session_state.page == "Dashboard":
 elif st.session_state.page == "Create/Edit CV":
     ui = st.session_state.get("ui", {})
     st.title("📝 CV Builder")
-
-    # --- Profile Pic Initialization ---
     profile_pic_base64 = ui.get("profile_pic", None)
 
-    # --- Education Logic ---
     if 'edu_level' not in st.session_state:
         edu_list = ui.get('education', [])
-        if isinstance(edu_list, list) and len(edu_list) > 0 and isinstance(edu_list[0], dict):
-            st.session_state.edu_level = edu_list[0].get(
-                'degree', "Bachelor's Degree")
-        else:
-            st.session_state.edu_level = "Bachelor's Degree"
+        st.session_state.edu_level = edu_list[0].get('degree', "Bachelor's Degree") if isinstance(
+            edu_list, list) and len(edu_list) > 0 else "Bachelor's Degree"
 
-    # --- Skills Logic ---
     if 'temp_skills' not in st.session_state:
         existing_skills = [s['name'] for s in ui.get(
             'skills', [])] if isinstance(ui.get('skills'), list) else []
         st.session_state.temp_skills = set(existing_skills)
 
-    # Photo Upload (Outside form)
     st.subheader("Profile Photo")
     uploaded_file = st.file_uploader(
         "Upload Profile Photo", type=["jpg", "jpeg", "png"])
@@ -144,19 +121,17 @@ elif st.session_state.page == "Create/Edit CV":
     elif profile_pic_base64:
         st.image(base64.b64decode(profile_pic_base64), width=100)
 
-    # --- Global Form Start ---
     with st.form("cv_universal_form"):
         tabs = st.tabs(["👤 Profile", "🎓 Education", "💼 Experience",
                        "🎖 Qualifications", "🛠 Skills", "🚀 Generate"])
-
         with tabs[0]:
             st.subheader("Personal Information")
             c1, c2 = st.columns(2)
             fn = c1.text_input("First Name", ui.get("first_name", ""))
             ln = c2.text_input("Last Name", ui.get("last_name", ""))
             em = st.text_input("Email", ui.get("email", ""))
-            cat_list = list(JOB_CATEGORIES.keys())
-            category = st.selectbox("Department", options=cat_list)
+            category = st.selectbox(
+                "Department", options=list(JOB_CATEGORIES.keys()))
             jt = st.selectbox(
                 "Job Title", options=JOB_CATEGORIES[category] + ["Other"])
             ph = c1.text_input("Phone", ui.get("phone", ""))
@@ -176,27 +151,15 @@ elif st.session_state.page == "Create/Edit CV":
         with tabs[1]:
             st.subheader("Academic Background")
             edu_list = ui.get('education', [])
-            ed = edu_list[0] if isinstance(edu_list, list) and len(
-                edu_list) > 0 and isinstance(edu_list[0], dict) else {}
-
+            ed = edu_list[0] if isinstance(
+                edu_list, list) and len(edu_list) > 0 else {}
             school_levels = ["Grade 1-8", "Grade 9-10", "Grade 11-12"]
-
-            # Level Selector
-            deg = st.selectbox(
-                "Level of Education",
-                options=DEGREE_TYPES,
-                index=DEGREE_TYPES.index(
-                    st.session_state.edu_level) if st.session_state.edu_level in DEGREE_TYPES else 0,
-                key="edu_level_selector"
-            )
-
-            # Rerun logic if level changes
+            deg = st.selectbox("Level of Education", options=DEGREE_TYPES, index=DEGREE_TYPES.index(
+                st.session_state.edu_level) if st.session_state.edu_level in DEGREE_TYPES else 0, key="edu_level_selector")
             if deg != st.session_state.edu_level:
                 st.session_state.edu_level = deg
                 st.rerun()
-
             st.divider()
-
             if deg in school_levels:
                 sch = st.text_input("School Name", ed.get('school', ""))
                 gy = st.number_input("Year of Completion",
@@ -246,9 +209,8 @@ elif st.session_state.page == "Create/Edit CV":
 
         with tabs[4]:
             st.subheader("🛠 Professional Skills")
-            skill_cats = list(SKILLS_DATABASE.keys())
             selected_cat = st.selectbox(
-                "📂 Choose Category", options=skill_cats)
+                "📂 Choose Category", options=list(SKILLS_DATABASE.keys()))
             category_options = SKILLS_DATABASE.get(selected_cat, [])
             cols = st.columns(3)
             for i, skill in enumerate(category_options):
@@ -265,14 +227,10 @@ elif st.session_state.page == "Create/Edit CV":
             submit = st.form_submit_button(
                 "🚀 Save Data & Generate CV", use_container_width=True)
 
-    # --- Logic After Submit ---
     if submit:
         try:
-            profile_payload = {
-                "profile_pic": profile_pic_base64, "email": em, "first_name": fn, "last_name": ln,
-                "job_title": jt, "phone": ph, "phone2": ph2, "address": adr, "age": int(age),
-                "gender": gen, "summary": summ
-            }
+            profile_payload = {"profile_pic": profile_pic_base64, "email": em, "first_name": fn, "last_name": ln,
+                               "job_title": jt, "phone": ph, "phone2": ph2, "address": adr, "age": int(age), "gender": gen, "summary": summ}
             res = supabase.table("profiles").upsert(
                 profile_payload, on_conflict="email").execute()
             p_id = res.data[0]['id']
@@ -289,7 +247,6 @@ elif st.session_state.page == "Create/Edit CV":
                 "user_references": [{"name": r_nm, "job": r_jb, "phone": r_ph}],
                 "skills": [{"name": s} for s in st.session_state.temp_skills]
             })
-
             generator = CVGenerator(
                 design=design, custom_theme=theme_hex, font_family=font_choice)
             st.session_state.current_pdf = generator.create_cv(
@@ -299,12 +256,8 @@ elif st.session_state.page == "Create/Edit CV":
         except Exception as e:
             st.error(f"Error: {e}")
 
-    # Display Preview & Download
+    # --- እዚህ ጋር የነበረው Preview ተወግዷል ---
     if st.session_state.current_pdf:
         st.divider()
-        pdf_bytes = bytes(st.session_state.current_pdf)
-        base64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
-        pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="800px" style="border:none;"></iframe>'
-        st.markdown(pdf_display, unsafe_allow_html=True)
-        st.download_button(label="📥 Download CV", data=pdf_bytes,
+        st.download_button(label="📥 Download CV", data=bytes(st.session_state.current_pdf),
                            file_name=f"{fn}_CV.pdf", mime="application/pdf", use_container_width=True)
