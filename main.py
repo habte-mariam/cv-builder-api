@@ -209,45 +209,55 @@ elif st.session_state.page == "Create/Edit CV":
 
 with tabs[4]:
     st.subheader("🛠 Professional Skills")
-    st.write("ክህሎቶቻችሁን ለመምረጥ የሚከተሉትን ምድቦች ይጫኑ")
 
-    # ሁሉንም ካታጎሪዎች በ Expander በማሳየት UI-ው እንዳይጨናነቅ እናደርጋለን
-    for cat_name, skills in SKILLS_DATABASE.items():
-        with st.expander(f"📂 {cat_name}", expanded=(cat_name == "Software & IT")):
-            # ክህሎቶቹን በረድፍ (Columns) እናደራጃቸዋለን
-            cols = st.columns(4)
-            for i, skill in enumerate(skills):
-                with cols[i % 4]:
-                    # ክህሎቱ ቀድሞ ተመርጦ ከሆነ የራሱ ከለር ይኖረዋል
-                    is_selected = skill in st.session_state.temp_skills
+    # 1. ካታጎሪ መምረጫ
+    selected_cat = st.selectbox(
+        "📂 የምድብ ምርጫ",
+        options=list(SKILLS_DATABASE.keys()),
+        help="ክህሎቶቹን ለማየት ምድብ ይምረጡ"
+    )
 
-                    # Custom Styling ለበተኖቹ (እንደ Pill እንዲመስሉ)
-                    button_label = f"✅ {skill}" if is_selected else f"➕ {skill}"
+    st.write(f"**{selected_cat}** ውስጥ ያሉ ክህሎቶች፦")
 
-                    if st.button(button_label, key=f"btn_{cat_name}_{skill}", use_container_width=True):
-                        if is_selected:
-                            st.session_state.temp_skills.remove(skill)
-                        else:
-                            st.session_state.temp_skills.add(skill)
-                        st.rerun()
+    # 2. በካታጎሪው ስር ያሉትን ክህሎቶች በ Grid መልክ ማሳያ
+    category_options = SKILLS_DATABASE.get(selected_cat, [])
 
-    # --- የተመረጡት ክህሎቶች ማጠቃለያ (Summary) ---
-    st.markdown("---")
-    st.write("🎯 **የተመረጡ ክህሎቶች:**")
+    # ኮሎሞችን በመጠቀም ስፔስ መቆጠብ
+    cols = st.columns(4)
 
+    for i, skill in enumerate(category_options):
+        with cols[i % 4]:
+            # ክህሎቱ ቀድሞ ተመርጦ ከሆነ ምልክት ያሳያል
+            is_selected = skill in st.session_state.temp_skills
+
+            # ለየት ያለ ስታይል ያላቸው በተኖች
+            label = f"✅ {skill}" if is_selected else f"{skill}"
+
+            # በተኑ ሲነካ Selection State-ን ይቀይራል
+            if st.button(label, key=f"btn_{selected_cat}_{skill}", use_container_width=True, type="secondary" if not is_selected else "primary"):
+                if is_selected:
+                    st.session_state.temp_skills.remove(skill)
+                else:
+                    st.session_state.temp_skills.add(skill)
+                st.rerun()
+
+    st.divider()
+
+    # 3. የተመረጡ ክህሎቶች ማሳያ (Visual Tags)
+    st.write("🎯 **የተመረጡ ክህሎቶች ዝርዝር:**")
     if st.session_state.temp_skills:
-        # የተመረጡትን እንደ ትናንሽ Tags (Pills) እናሳያቸዋለን
-        skills_html = ""
+        # የተመረጡትን በቆንጆ የ HTML ስታይል ማሳያ
+        skills_pills = ""
         for s in sorted(list(st.session_state.temp_skills)):
-            skills_html += f'<span style="background-color: {theme_hex}; color: white; padding: 5px 12px; border-radius: 15px; margin-right: 8px; display: inline-block; margin-bottom: 8px; font-size: 14px;">{s}</span>'
+            skills_pills += f'<span style="background-color:#E1E4E8; color:#24292E; padding:4px 10px; border-radius:10px; margin:2px; display:inline-block; border:1px solid #D1D5DA; font-size:12px;">{s}</span>'
 
-        st.markdown(skills_html, unsafe_allow_html=True)
+        st.markdown(skills_pills, unsafe_allow_html=True)
 
-        if st.button("🗑 ሁሉንም አጥፋ", type="secondary"):
+        if st.button("🗑 ሁሉንም አጽዳ", type="tertiary"):
             st.session_state.temp_skills = set()
             st.rerun()
     else:
-        st.info("እባክዎ ከላይ ካሉት ምድቦች ውስጥ ክህሎቶችን ይምረጡ።")
+        st.caption("እስካሁን ምንም ክህሎት አልተመረጠም።")
 
         with tabs[5]:
             submit = st.form_submit_button(
