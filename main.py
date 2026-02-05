@@ -121,9 +121,12 @@ elif st.session_state.page == "Create/Edit CV":
     elif profile_pic_base64:
         st.image(base64.b64decode(profile_pic_base64), width=100)
 
+    # ታቦቹን ከፎርም ውጭ በማድረግ Button እንዲጠቀሙ ማስቻል
+    tabs = st.tabs(["👤 Profile", "🎓 Education", "💼 Experience",
+                   "🎖 Qualifications", "🛠 Skills", "🚀 Generate"])
+
+    # ፎርሙን በሌሎቹ ታቦች ላይ ብቻ መጠቀም (ከ Skills በስተቀር)
     with st.form("cv_universal_form"):
-        tabs = st.tabs(["👤 Profile", "🎓 Education", "💼 Experience",
-                       "🎖 Qualifications", "🛠 Skills", "🚀 Generate"])
         with tabs[0]:
             st.subheader("Personal Information")
             c1, c2 = st.columns(2)
@@ -156,9 +159,11 @@ elif st.session_state.page == "Create/Edit CV":
             school_levels = ["Grade 1-8", "Grade 9-10", "Grade 11-12"]
             deg = st.selectbox("Level of Education", options=DEGREE_TYPES, index=DEGREE_TYPES.index(
                 st.session_state.edu_level) if st.session_state.edu_level in DEGREE_TYPES else 0, key="edu_level_selector")
+
             if deg != st.session_state.edu_level:
                 st.session_state.edu_level = deg
                 st.rerun()
+
             st.divider()
             if deg in school_levels:
                 sch = st.text_input("School Name", ed.get('school', ""))
@@ -207,62 +212,45 @@ elif st.session_state.page == "Create/Edit CV":
                 r_jb = st.text_input("Ref Job & Company", rf.get('job', ""))
                 r_ph = st.text_input("Ref Phone", rf.get('phone', ""))
 
-with tabs[4]:
-    st.subheader("🛠 Professional Skills")
-
-    # 1. ካታጎሪ መምረጫ
-    selected_cat = st.selectbox(
-        "📂 የምድብ ምርጫ",
-        options=list(SKILLS_DATABASE.keys()),
-        help="ክህሎቶቹን ለማየት ምድብ ይምረጡ"
-    )
-
-    st.write(f"**{selected_cat}** ውስጥ ያሉ ክህሎቶች፦")
-
-    # 2. በካታጎሪው ስር ያሉትን ክህሎቶች በ Grid መልክ ማሳያ
-    category_options = SKILLS_DATABASE.get(selected_cat, [])
-
-    # ኮሎሞችን በመጠቀም ስፔስ መቆጠብ
-    cols = st.columns(4)
-
-    for i, skill in enumerate(category_options):
-        with cols[i % 4]:
-            # ክህሎቱ ቀድሞ ተመርጦ ከሆነ ምልክት ያሳያል
-            is_selected = skill in st.session_state.temp_skills
-
-            # ለየት ያለ ስታይል ያላቸው በተኖች
-            label = f"✅ {skill}" if is_selected else f"{skill}"
-
-            # በተኑ ሲነካ Selection State-ን ይቀይራል
-            if st.button(label, key=f"btn_{selected_cat}_{skill}", use_container_width=True, type="secondary" if not is_selected else "primary"):
-                if is_selected:
-                    st.session_state.temp_skills.remove(skill)
-                else:
-                    st.session_state.temp_skills.add(skill)
-                st.rerun()
-
-    st.divider()
-
-    # 3. የተመረጡ ክህሎቶች ማሳያ (Visual Tags)
-    st.write("🎯 **የተመረጡ ክህሎቶች ዝርዝር:**")
-    if st.session_state.temp_skills:
-        # የተመረጡትን በቆንጆ የ HTML ስታይል ማሳያ
-        skills_pills = ""
-        for s in sorted(list(st.session_state.temp_skills)):
-            skills_pills += f'<span style="background-color:#E1E4E8; color:#24292E; padding:4px 10px; border-radius:10px; margin:2px; display:inline-block; border:1px solid #D1D5DA; font-size:12px;">{s}</span>'
-
-        st.markdown(skills_pills, unsafe_allow_html=True)
-
-        if st.button("🗑 ሁሉንም አጽዳ", type="tertiary"):
-            st.session_state.temp_skills = set()
-            st.rerun()
-    else:
-        st.caption("እስካሁን ምንም ክህሎት አልተመረጠም።")
-
         with tabs[5]:
+            # ይህ በተን የሁሉንም ታቦች ዳታ (Skills-ን ጨምሮ) ሴቭ ያደርጋል
             submit = st.form_submit_button(
                 "🚀 Save Data & Generate CV", use_container_width=True)
 
+    # --- Skills Tab (ከፎርም ውጭ - Button Errorን ለመፍታት) ---
+    with tabs[4]:
+        st.subheader("🛠 Professional Skills")
+        selected_cat = st.selectbox(
+            "📂 የምድብ ምርጫ", options=list(SKILLS_DATABASE.keys()))
+
+        category_options = SKILLS_DATABASE.get(selected_cat, [])
+        cols = st.columns(4)
+
+        for i, skill in enumerate(category_options):
+            with cols[i % 4]:
+                is_selected = skill in st.session_state.temp_skills
+                label = f"✅ {skill}" if is_selected else f"{skill}"
+
+                # አሁን በተኑ እዚህ ጋር ያለምንም ስህተት ይሰራል
+                if st.button(label, key=f"btn_{selected_cat}_{skill}", use_container_width=True,
+                             type="secondary" if not is_selected else "primary"):
+                    if is_selected:
+                        st.session_state.temp_skills.remove(skill)
+                    else:
+                        st.session_state.temp_skills.add(skill)
+                    st.rerun()
+
+        st.divider()
+        st.write("🎯 **የተመረጡ ክህሎቶች:**")
+        if st.session_state.temp_skills:
+            skills_pills = "".join(
+                [f'<span style="background-color:#E1E4E8; color:#24292E; padding:4px 10px; border-radius:10px; margin:2px; display:inline-block; border:1px solid #D1D5DA; font-size:12px;">{s}</span>' for s in sorted(list(st.session_state.temp_skills))])
+            st.markdown(skills_pills, unsafe_allow_html=True)
+            if st.button("🗑 ሁሉንም አጽዳ"):
+                st.session_state.temp_skills = set()
+                st.rerun()
+
+    # --- Submit Logic ---
     if submit:
         try:
             profile_payload = {"profile_pic": profile_pic_base64, "email": em, "first_name": fn, "last_name": ln,
@@ -270,6 +258,7 @@ with tabs[4]:
             res = supabase.table("profiles").upsert(
                 profile_payload, on_conflict="email").execute()
             p_id = res.data[0]['id']
+
             supabase.table("education").upsert({"profile_id": p_id, "school": sch, "degree": deg, "field": fld, "grad_year": gy, "cgpa": str(
                 cgpa), "project": proj}, on_conflict="profile_id").execute()
             supabase.table("experience").upsert({"profile_id": p_id, "company_name": cn, "job_title": ex_jt,
@@ -283,6 +272,7 @@ with tabs[4]:
                 "user_references": [{"name": r_nm, "job": r_jb, "phone": r_ph}],
                 "skills": [{"name": s} for s in st.session_state.temp_skills]
             })
+
             generator = CVGenerator(
                 design=design, custom_theme=theme_hex, font_family=font_choice)
             st.session_state.current_pdf = generator.create_cv(
@@ -292,7 +282,6 @@ with tabs[4]:
         except Exception as e:
             st.error(f"Error: {e}")
 
-    # --- እዚህ ጋር የነበረው Preview ተወግዷል ---
     if st.session_state.current_pdf:
         st.divider()
         st.download_button(label="📥 Download CV", data=bytes(st.session_state.current_pdf),
