@@ -9,6 +9,7 @@ from constants import (
     DEGREE_TYPES, FIELDS_OF_STUDY, DEREJA_CERTIFICATES,
     CERTIFICATE_NAMES, ISSUING_ORGANIZATIONS
 )
+from datetime import date
 
 # --- Supabase & Gemini API Key Setup ---
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
@@ -39,6 +40,8 @@ if "ui" not in st.session_state:
     st.session_state.ui = {}
 if "current_pdf" not in st.session_state:
     st.session_state.current_pdf = None
+if "temp_skills" not in st.session_state:
+    st.session_state.temp_skills = set()
 
 # --- 2. Sidebar Layout ---
 with st.sidebar:
@@ -92,6 +95,11 @@ if st.session_state.page == "Dashboard":
                                 if st.button("📝 Edit CV", key=f"edit_{user['id']}", use_container_width=True):
                                     st.session_state.ui = user
                                     st.session_state.page = "Create/Edit CV"
+                                    # Skill-ቹን መጫን
+                                    existing_skills = [s['name']
+                                                       for s in user.get('skills', [])]
+                                    st.session_state.temp_skills = set(
+                                        existing_skills)
                                     st.rerun()
                 else:
                     st.warning("⚠️ No records found.")
@@ -101,31 +109,11 @@ elif st.session_state.page == "Create/Edit CV":
     st.title("📝 CV Builder")
     profile_pic_base64 = ui.get("profile_pic", None)
 
-    if 'edu_level' not in st.session_state:
-        edu_list = ui.get('education', [])
-        st.session_state.edu_level = edu_list[0].get('degree', "Bachelor's Degree") if isinstance(
-            edu_list, list) and len(edu_list) > 0 else "Bachelor's Degree"
-
-    if 'temp_skills' not in st.session_state:
-        existing_skills = [s['name'] for s in ui.get(
-            'skills', [])] if isinstance(ui.get('skills'), list) else []
-        st.session_state.temp_skills = set(existing_skills)
-
-    st.subheader("Profile Photo")
-    uploaded_file = st.file_uploader(
-        "Upload Profile Photo", type=["jpg", "jpeg", "png"])
-    if uploaded_file:
-        bytes_data = uploaded_file.getvalue()
-        profile_pic_base64 = base64.b64encode(bytes_data).decode("utf-8")
-        st.image(bytes_data, width=100)
-    elif profile_pic_base64:
-        st.image(base64.b64decode(profile_pic_base64), width=100)
-
-    # ታቦቹን ከፎርም ውጭ በማድረግ Button እንዲጠቀሙ ማስቻል
+    # Tabs መፍጠር
     tabs = st.tabs(["👤 Profile", "🎓 Education", "💼 Experience",
                    "🎖 Qualifications", "🛠 Skills", "🚀 Generate"])
 
-    # ፎርሙን በሌሎቹ ታቦች ላይ ብቻ መጠቀም (ከ Skills በስተቀር)
+    # ፎርሙን እዚህ ጋር እንጀምራለን
     with st.form("cv_universal_form"):
         with tabs[0]:
             st.subheader("Personal Information")
@@ -140,7 +128,7 @@ elif st.session_state.page == "Create/Edit CV":
             ph = c1.text_input("Phone", ui.get("phone", ""))
             ph2 = c2.text_input("Secondary Phone", ui.get("phone2", ""))
             adr = st.text_input("Address", ui.get("address", ""))
-            from datetime import date
+
             today = date.today()
             birth_date = st.date_input("Select Birth Date", value=date(
                 today.year - 25, today.month, today.day))
@@ -156,19 +144,12 @@ elif st.session_state.page == "Create/Edit CV":
             edu_list = ui.get('education', [])
             ed = edu_list[0] if isinstance(
                 edu_list, list) and len(edu_list) > 0 else {}
-            school_levels = ["Grade 1-8", "Grade 9-10", "Grade 11-12"]
-            deg = st.selectbox("Level of Education", options=DEGREE_TYPES, index=DEGREE_TYPES.index(
-                st.session_state.edu_level) if st.session_state.edu_level in DEGREE_TYPES else 0, key="edu_level_selector")
-
-            if deg != st.session_state.edu_level:
-                st.session_state.edu_level = deg
-                st.rerun()
+            deg = st.selectbox("Level of Education", options=DEGREE_TYPES)
 
             st.divider()
-            if deg in school_levels:
+            if deg in ["Grade 1-8", "Grade 9-10", "Grade 11-12"]:
                 sch = st.text_input("School Name", ed.get('school', ""))
-                gy = st.number_input("Year of Completion",
-                                     1990, 2030, int(ed.get('grad_year', 2024)))
+                gy = st.number_input("Year of Completion", 1990, 2030, 2024)
                 fld, cgpa, proj = "General Education", "N/A", "N/A"
             else:
                 sch_choice = st.selectbox("University", options=UNIVERSITIES)
@@ -181,8 +162,7 @@ elif st.session_state.page == "Create/Edit CV":
                 cgpa = st.text_input("CGPA", str(ed.get('cgpa', '0.0')))
                 proj = st.text_area("Final Project/Thesis",
                                     ed.get('project', ""))
-                gy = st.number_input("Year of Graduation",
-                                     1990, 2030, int(ed.get('grad_year', 2024)))
+                gy = st.number_input("Year of Graduation", 1990, 2030, 2024)
 
         with tabs[2]:
             st.subheader("Work History")
@@ -213,42 +193,28 @@ elif st.session_state.page == "Create/Edit CV":
                 r_ph = st.text_input("Ref Phone", rf.get('phone', ""))
 
         with tabs[5]:
-            # ይህ በተን የሁሉንም ታቦች ዳታ (Skills-ን ጨምሮ) ሴቭ ያደርጋል
+            st.subheader("Finalize CV")
+            st.info("ክህሎቶችን (Skills) በመረጡት መሰረት ሴቭ ይደረጋሉ።")
+            # Submit በተኑ እዚህ ጋር መሆን አለበት!
             submit = st.form_submit_button(
                 "🚀 Save Data & Generate CV", use_container_width=True)
 
-    # --- Skills Tab (ከፎርም ውጭ - Button Errorን ለመፍታት) ---
+    # Skills Tab ከፎርም ውጭ (Button Error ለመከላከል)
     with tabs[4]:
         st.subheader("🛠 Professional Skills")
         selected_cat = st.selectbox(
             "📂 የምድብ ምርጫ", options=list(SKILLS_DATABASE.keys()))
-
         category_options = SKILLS_DATABASE.get(selected_cat, [])
         cols = st.columns(4)
-
         for i, skill in enumerate(category_options):
             with cols[i % 4]:
                 is_selected = skill in st.session_state.temp_skills
-                label = f"✅ {skill}" if is_selected else f"{skill}"
-
-                # አሁን በተኑ እዚህ ጋር ያለምንም ስህተት ይሰራል
-                if st.button(label, key=f"btn_{selected_cat}_{skill}", use_container_width=True,
-                             type="secondary" if not is_selected else "primary"):
+                if st.button(f"{'✅' if is_selected else ''} {skill}", key=f"s_{skill}", use_container_width=True):
                     if is_selected:
                         st.session_state.temp_skills.remove(skill)
                     else:
                         st.session_state.temp_skills.add(skill)
                     st.rerun()
-
-        st.divider()
-        st.write("🎯 **የተመረጡ ክህሎቶች:**")
-        if st.session_state.temp_skills:
-            skills_pills = "".join(
-                [f'<span style="background-color:#E1E4E8; color:#24292E; padding:4px 10px; border-radius:10px; margin:2px; display:inline-block; border:1px solid #D1D5DA; font-size:12px;">{s}</span>' for s in sorted(list(st.session_state.temp_skills))])
-            st.markdown(skills_pills, unsafe_allow_html=True)
-            if st.button("🗑 ሁሉንም አጽዳ"):
-                st.session_state.temp_skills = set()
-                st.rerun()
 
     # --- Submit Logic ---
     if submit:
@@ -283,6 +249,5 @@ elif st.session_state.page == "Create/Edit CV":
             st.error(f"Error: {e}")
 
     if st.session_state.current_pdf:
-        st.divider()
         st.download_button(label="📥 Download CV", data=bytes(st.session_state.current_pdf),
                            file_name=f"{fn}_CV.pdf", mime="application/pdf", use_container_width=True)
