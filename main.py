@@ -113,28 +113,44 @@ if st.session_state.page == "Dashboard":
                 else:
                     st.warning("⚠️ No records found.")
 
-# --- 4. Create/Edit Page ---
 elif st.session_state.page == "Create/Edit CV":
     ui = st.session_state.get("ui", {})
     st.title("📝 CV Builder")
     
-    if not ui:
-        st.info("💡 Please start by loading a CV from the Dashboard or enter your details below.")
+    # --- 1. ቫሪያብሉን እዚህ ጋር እናስጀምረው (Fix for NameError) ---
+    # መጀመሪያ ከዳታቤዝ የመጣ ፎቶ ካለ እሱን ይይዛል፣ ካልሆነ None ይሆናል
+    profile_pic_base64 = ui.get("profile_pic", None)
     
-    # Profile Photo Upload
+    # Education logic
+    if 'edu_level' not in st.session_state:
+        edu_list = ui.get('education', [])
+        initial_deg = edu_list[0].get('degree', "Bachelor's Degree") if edu_list else "Bachelor's Degree"
+        st.session_state.edu_level = initial_deg
+
+    # Skills logic
+    if 'temp_skills' not in st.session_state:
+        existing_skills = [s['name'] for s in ui.get('skills', [])] if isinstance(ui.get('skills'), list) else []
+        st.session_state.temp_skills = set(existing_skills)
+
+    # --- 2. ፎቶ መጫኛ (ፎርም ውስጥ መሆን የለበትም) ---
     st.subheader("Profile Photo")
     uploaded_file = st.file_uploader("Upload Profile Photo", type=["jpg", "jpeg", "png"])
-    profile_pic_base64 = ui.get("profile_pic", None)
+    
     if uploaded_file:
         bytes_data = uploaded_file.getvalue()
+        # አዲስ ፎቶ ከተመረጠ ቫሪያብሉ ይዘመናል
         profile_pic_base64 = base64.b64encode(bytes_data).decode("utf-8")
         st.image(bytes_data, width=100)
+    elif profile_pic_base64:
+        # ቀድሞ የተጫነ ፎቶ ካለ ለማሳየት
+        st.image(base64.b64decode(profile_pic_base64), width=100)
 
-    # --- Start Global Form ---
+    # --- 3. አሁን ፎርሙ ይቀጥላል ---
     with st.form("cv_universal_form"):
+        # ... (የቀረው የፎርም ኮድህ በትክክል እዚህ ይግባ)
         tabs = st.tabs(["👤 Profile", "🎓 Education", "💼 Experience", "🎖 Qualifications", "🛠 Skills", "🚀 Generate"])
         
-        # 1. Profile Tab
+        # --- Profile Tab ---
         with tabs[0]:
             st.subheader("Personal Information")
             c1, c2 = st.columns(2)
@@ -142,8 +158,9 @@ elif st.session_state.page == "Create/Edit CV":
             ln = c2.text_input("Last Name", ui.get("last_name", ""))
             em = st.text_input("Email", ui.get("email", ""))
             
-            category_options = list(JOB_CATEGORIES.keys())
-            category = st.selectbox("Department", options=category_options)
+            # Job Titles
+            cat_list = list(JOB_CATEGORIES.keys())
+            category = st.selectbox("Department", options=cat_list)
             jt = st.selectbox("Job Title", options=JOB_CATEGORIES[category] + ["Other"])
             
             ph = c1.text_input("Phone", ui.get("phone", ""))
@@ -152,32 +169,30 @@ elif st.session_state.page == "Create/Edit CV":
             
             from datetime import date
             today = date.today()
-            birth_date = st.date_input(
-                "Select Birth Date",
-                value=date(today.year - 25, today.month, today.day),
-                max_value=date(today.year - 18, today.month, today.day),
-                min_value=date(today.year - 65, today.month, today.day)
-            )
+            birth_date = st.date_input("Select Birth Date", value=date(today.year - 25, today.month, today.day))
             age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
             st.info(f"Age: **{age}**")
-            
             gen = c2.selectbox("Gender", ["Male", "Female"], index=0 if ui.get("gender")=="Male" else 1)
             summ = st.text_area("Summary", ui.get("summary", ""), height=120)
 
-        # 2. Education Tab
+        # --- Education Tab (የተስተካከለ) ---
         with tabs[1]:
             st.subheader("Academic Background")
             edu_list = ui.get('education', [])
             ed = edu_list[0] if isinstance(edu_list, list) and len(edu_list) > 0 else {}
+            
             school_levels = ["Grade 1-8", "Grade 9-10", "Grade 11-12"]
-            current_deg = ed.get('degree', "Bachelor's Degree")
+            
+            # ምርጫውን በየጊዜው እንዲያነብ 'key' እንሰጠዋለን
             deg = st.selectbox("Level of Education", options=DEGREE_TYPES, 
-                               index=DEGREE_TYPES.index(current_deg) if current_deg in DEGREE_TYPES else 0)
-
+                               index=DEGREE_TYPES.index(st.session_state.edu_level) if st.session_state.edu_level in DEGREE_TYPES else 0)
+            
+            # ሎጂኩ እዚህ ጋር ነው (አስፈላጊ የሆኑትን ብቻ ያሳያል)
             if deg in school_levels:
                 sch = st.text_input("School Name", ed.get('school', ""))
                 gy = st.number_input("Year of Completion", 1990, 2030, int(ed.get('grad_year', 2024)))
-                fld, cgpa, proj = "General Education", "N/A", ""
+                # እነዚህ ለዳታቤዝ ባዶ ይላካሉ
+                fld, cgpa, proj = "General Education", "N/A", "N/A"
             else:
                 sch_choice = st.selectbox("University", options=UNIVERSITIES)
                 sch = st.text_input("Manual School Name", ed.get('school', "")) if sch_choice == "Other" else sch_choice
@@ -187,23 +202,18 @@ elif st.session_state.page == "Create/Edit CV":
                 proj = st.text_area("Final Project/Thesis", ed.get('project', ""))
                 gy = st.number_input("Year of Graduation", 1990, 2030, int(ed.get('grad_year', 2024)))
 
-        # 3. Experience Tab
+        # --- Experience Tab ---
         with tabs[2]:
             st.subheader("Work History")
             exp_list = ui.get('experience', [])
             ex = exp_list[0] if isinstance(exp_list, list) and len(exp_list) > 0 else {}
             cn = st.text_input("Company Name", ex.get('company_name', ""))
             ex_jt = st.text_input("Position", ex.get('job_title', ""))
-            
-            try:
-                raw_dur = int(''.join(filter(str.isdigit, str(ex.get('duration', '0')))))
-            except:
-                raw_dur = 0
-            dur = st.number_input("Years of Experience", 0, 40, raw_dur)
+            dur = st.number_input("Years of Experience", 0, 40, 0)
             desc = st.text_area("Description", ex.get('job_description', ""))
             ach = st.text_area("Key Achievements", ex.get('achievements', ""))
 
-        # 4. Qualifications Tab
+        # --- Qualifications Tab ---
         with tabs[3]:
             col_a, col_b = st.columns(2)
             with col_a:
@@ -219,35 +229,34 @@ elif st.session_state.page == "Create/Edit CV":
                 r_jb = st.text_input("Ref Job & Company", rf.get('job', ""))
                 r_ph = st.text_input("Ref Phone", rf.get('phone', ""))
 
-        # 5. Skills Tab
+        # --- Skills Tab (የተስተካከለ - Unique Keys ተጨምሯል) ---
         with tabs[4]:
             st.subheader("🛠 Professional Skills")
-            if 'temp_skills' not in st.session_state:
-                existing_skills = [s['name'] for s in ui.get('skills', [])] if isinstance(ui.get('skills'), list) else []
-                st.session_state.temp_skills = set(existing_skills)
-
             skill_cats = list(SKILLS_DATABASE.keys())
-            selected_cat = st.selectbox("📂 Choose Skill Category", options=skill_cats)
+            selected_cat = st.selectbox("📂 Choose Category", options=skill_cats)
             
             category_options = SKILLS_DATABASE.get(selected_cat, [])
             cols = st.columns(3)
             for i, skill in enumerate(category_options):
+                # ለእያንዳንዱ ስኪል የሚለያይ (Unique) Key መስጠት ካቴጎሪ ሲቀየር ዳታ እንዳይጠፋ ያደርጋል
                 is_checked = skill in st.session_state.temp_skills
                 with cols[i % 3]:
-                    if st.checkbox(skill, value=is_checked, key=f"chk_{skill}"):
+                    # checkbox ሲነካ በዲፎልት 'ui' ውስጥ እንዲገባ አደረግነው
+                    if st.checkbox(skill, value=is_checked, key=f"skill_box_{selected_cat}_{skill}"):
                         st.session_state.temp_skills.add(skill)
-                    else:
+                    elif not is_checked:
+                        # ይህ መስመር ስኪሉ ከተመረጠ በኋላ ድጋሚ ከተነካ እንዲጠፋ ያደርጋል
                         if skill in st.session_state.temp_skills:
                             st.session_state.temp_skills.remove(skill)
             
-            st.info(f"Selected: {', '.join(sorted(st.session_state.temp_skills))}")
+            st.info(f"Current List: {', '.join(sorted(st.session_state.temp_skills))}")
 
-        # 6. Generate Tab
+        # --- Generate Tab ---
         with tabs[5]:
             st.info("Ensure all data is correct before proceeding.")
             submit = st.form_submit_button("🚀 Save Data & Generate Full Preview", use_container_width=True)
 
-    # --- Logic after form submission (Outside the form) ---
+    # --- Logic after submission ---
     if submit:
         try:
             profile_payload = {
